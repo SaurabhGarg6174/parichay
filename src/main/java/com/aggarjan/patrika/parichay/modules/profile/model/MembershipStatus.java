@@ -11,7 +11,7 @@ import lombok.Setter;
 public class MembershipStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(unique = true, nullable = false)
     private String name; // e.g., "PENDING", "APPROVED", "REJECTED"
