@@ -4,11 +4,13 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import com.aggarjan.patrika.parichay.core.model.BaseEntity;
+
 @Entity
-@Table(name = "tbl_membership_status")
+@Table(name = "membership_statuses")
 @Getter
 @Setter
-public class MembershipStatus {
+public class MembershipStatus extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
