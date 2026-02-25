@@ -8,6 +8,8 @@ import com.aggarjan.patrika.parichay.modules.auth.model.UserProfile;
 import com.aggarjan.patrika.parichay.modules.auth.repo.RoleRepository;
 import com.aggarjan.patrika.parichay.modules.auth.repo.UserRepository;
 import com.aggarjan.patrika.parichay.modules.auth.repo.UserProfileRepository;
+import com.aggarjan.patrika.parichay.modules.auth.repo.PasswordResetTokenRepository;
+import com.aggarjan.patrika.parichay.modules.auth.model.PasswordResetToken;
 import com.aggarjan.patrika.parichay.core.exception.BadRequestException;
 import com.aggarjan.patrika.parichay.core.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +27,8 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +37,7 @@ public class AuthenticationService {
         private final UserRepository repository;
         private final RoleRepository roleRepository;
         private final UserProfileRepository userProfileRepository;
+        private final PasswordResetTokenRepository passwordResetTokenRepository;
         private final PasswordEncoder passwordEncoder;
         private final JwtService jwtService;
         private final AuthenticationManager authenticationManager;
@@ -139,5 +144,84 @@ public class AuthenticationService {
                         }
                 }
                 throw new BadRequestException("Invalid refresh token");
+        }
+
+        public void forgotPassword(String email) {
+                var user = repository.findByEmail(email)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "User not found with email: " + email));
+
+                passwordResetTokenRepository.deleteByUser(user);
+
+                String tokenPattern = UUID.randomUUID().toString();
+                PasswordResetToken token = PasswordResetToken.builder()
+                                .token(tokenPattern)
+                                .user(user)
+                                .expiryDate(LocalDateTime.now().plusHours(1))
+                                .build();
+
+                passwordResetTokenRepository.save(token);
+
+                // TODO: Integrate actual Email Sending logic here
+                // Token generated: " + tokenPattern
+        }
+
+        public void resetPassword(ResetPasswordRequest request) {
+                PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.token())
+                                .orElseThrow(() -> new BadRequestException("Invalid reset token"));
+
+                if (resetToken.isExpired()) {
+                        passwordResetTokenRepository.delete(resetToken);
+                        throw new BadRequestException("Token has expired");
+                }
+
+                if (!request.newPassword().equals(request.confirmationPassword())) {
+                        throw new BadRequestException("New password and confirmation password do not match");
+                }
+
+                User user = resetToken.getUser();
+                user.setPassword(passwordEncoder.encode(request.newPassword()));
+                repository.save(user);
+
+                passwordResetTokenRepository.delete(resetToken);
+        }
+
+        public String managePassword(PasswordManagementRequest request, String userEmail) {
+                if (request.action() == null) {
+                        throw new BadRequestException("Action is required");
+                }
+
+                switch (request.action().toUpperCase()) {
+                        case "CHANGE":
+                                if (userEmail == null) {
+                                        throw new BadRequestException("Authentication required to change password");
+                                }
+                                if (request.currentPassword() == null || request.newPassword() == null
+                                                || request.confirmationPassword() == null) {
+                                        throw new BadRequestException("Missing required fields for password change");
+                                }
+                                changePassword(new ChangePasswordRequest(request.currentPassword(),
+                                                request.newPassword(), request.confirmationPassword()), userEmail);
+                                return "Password changed successfully";
+
+                        case "FORGOT":
+                                if (request.email() == null || request.email().isBlank()) {
+                                        throw new BadRequestException("Email is required for forgot password");
+                                }
+                                forgotPassword(request.email());
+                                return "Password reset link processing logic invoked successfully";
+
+                        case "RESET":
+                                if (request.token() == null || request.newPassword() == null
+                                                || request.confirmationPassword() == null) {
+                                        throw new BadRequestException("Missing required fields for password reset");
+                                }
+                                resetPassword(new ResetPasswordRequest(request.token(), request.newPassword(),
+                                                request.confirmationPassword()));
+                                return "Password reset successfully";
+
+                        default:
+                                throw new BadRequestException("Invalid password action: " + request.action());
+                }
         }
 }

@@ -36,12 +36,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(service.refreshToken(authHeader), "Token refreshed successfully"));
     }
 
-    @PostMapping("/change-password")
-    public ResponseEntity<ApiResponse<Void>> changePassword(
-            @Valid @RequestBody ChangePasswordRequest request,
+    @PostMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> managePassword(
+            @Valid @RequestBody PasswordManagementRequest request,
             Principal principal) {
-        service.changePassword(request, principal.getName());
-        return ResponseEntity.ok(ApiResponse.success(null, "Password changed successfully"));
+        String message = service.managePassword(request, principal != null ? principal.getName() : null);
+        return ResponseEntity.ok(ApiResponse.success(null, message));
     }
 
     @GetMapping("/me")
@@ -52,16 +52,6 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
-        // Since we are using stateless JWT, we cannot invalidate the token on server
-        // side without a blacklist.
-        // For now, we just instruct client to clear it.
         return ResponseEntity.ok(ApiResponse.success(null, "Logged out successfully"));
-    }
-
-    // Placeholder for forgot password
-    @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestParam String email) {
-        // Implement email service logic here
-        return ResponseEntity.ok(ApiResponse.success(null, "Password reset link sent to email (Not implemented yet)"));
     }
 }
