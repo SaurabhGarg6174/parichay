@@ -1,0 +1,242 @@
+{
+    "info": {
+        "name": "Parichay API",
+        "description": "Postman collection for all APIs in the Parichay project.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080/api/v1",
+            "type": "string"
+        },
+        {
+            "key": "auth_token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password\",\n  \"mobileNumber\": \"9876543210\"\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/auth/register", "host": [ "{{base_url}}" ], "path": [ "auth", "register" ] }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password\"\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/auth/login", "host": [ "{{base_url}}" ], "path": [ "auth", "login" ] }
+                    }
+                },
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "url": { "raw": "{{base_url}}/auth/refresh", "host": [ "{{base_url}}" ], "path": [ "auth", "refresh" ] }
+                    }
+                },
+                {
+                    "name": "Manage Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"oldPassword\": \"password\",\n  \"newPassword\": \"newPassword123\"\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/auth/password", "host": [ "{{base_url}}" ], "path": [ "auth", "password" ] }
+                    }
+                },
+                {
+                    "name": "Get Current User",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "url": { "raw": "{{base_url}}/auth/me", "host": [ "{{base_url}}" ], "path": [ "auth", "me" ] }
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "url": { "raw": "{{base_url}}/auth/logout", "host": [ "{{base_url}}" ], "path": [ "auth", "logout" ] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Profiles (BioData)",
+            "item": [
+                {
+                    "name": "Create Profile",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"fullName\": \"John Doe\",\n  \"dob\": \"1990-01-01\",\n  \"gender\": \"Male\"\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/profiles", "host": [ "{{base_url}}" ], "path": [ "profiles" ] }
+                    }
+                },
+                {
+                    "name": "Get My Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "url": { "raw": "{{base_url}}/profiles/me", "host": [ "{{base_url}}" ], "path": [ "profiles", "me" ] }
+                    }
+                },
+                {
+                    "name": "Update My Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"fullName\": \"John Doe Updated\",\n  \"dob\": \"1990-01-01\",\n  \"gender\": \"Male\"\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/profiles/me", "host": [ "{{base_url}}" ], "path": [ "profiles", "me" ] }
+                    }
+                },
+                {
+                    "name": "Get Profile By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "url": { "raw": "{{base_url}}/profiles/1", "host": [ "{{base_url}}" ], "path": [ "profiles", "1" ] }
+                    }
+                },
+                {
+                    "name": "Get All Profiles",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/profiles?page=0&size=10&sort=createdAt",
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "profiles" ],
+                            "query": [
+                                { "key": "page", "value": "0" },
+                                { "key": "size", "value": "10" },
+                                { "key": "sort", "value": "createdAt" }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Payments",
+            "item": [
+                {
+                    "name": "Initiate Payment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"amount\": 100.0\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/payments/initiate", "host": [ "{{base_url}}" ], "path": [ "payments", "initiate" ] }
+                    }
+                },
+                {
+                    "name": "Verify Payment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" },
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"paymentId\": \"PAY_123456\",\n  \"signature\": \"SIGN_123456\"\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/payments/verify", "host": [ "{{base_url}}" ], "path": [ "payments", "verify" ] }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Admin",
+            "item": [
+                {
+                    "name": "Get Profiles By Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/profiles?statusId=1&page=0&size=10",
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "admin", "profiles" ],
+                            "query": [
+                                { "key": "statusId", "value": "1" },
+                                { "key": "page", "value": "0" },
+                                { "key": "size", "value": "10" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Profile Status",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                        ],
+                        "url": { "raw": "{{base_url}}/admin/profiles/1/status/2", "host": [ "{{base_url}}" ], "path": [ "admin", "profiles", "1", "status", "2" ] }
+                    }
+                }
+            ]
+        }
+    ]
+}

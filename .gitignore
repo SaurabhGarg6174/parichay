@@ -1,33 +1,36 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
 *.iml
+*.iws
 *.ipr
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# OS Files
+.DS_Store
+Thumbs.db
 
-### VS Code ###
-.vscode/
+# Generic ignores
+node_modules/
+target/
+build/
+dist/
+.next/
+out/
+.env*
+*.log
+
+# Backend specific (if not covered by generic)
+backend/target/
+backend/startup_log.txt
+backend/uploads/
+
+# Frontend specific (if not covered by generic)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env*
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
