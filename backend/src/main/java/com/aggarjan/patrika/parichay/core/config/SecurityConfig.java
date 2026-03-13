@@ -47,10 +47,12 @@ public class SecurityConfig {
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh",
-                                "/api/v1/auth/password",
+                                "/api/v1/auth/**",
+                                "/api/v1/metadata/**",
                                 "/uploads/**")
                         .permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/profiles").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/profiles/search").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
 

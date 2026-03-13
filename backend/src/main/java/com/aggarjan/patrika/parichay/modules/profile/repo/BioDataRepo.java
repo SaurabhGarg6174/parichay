@@ -2,12 +2,16 @@ package com.aggarjan.patrika.parichay.modules.profile.repo;
 
 import com.aggarjan.patrika.parichay.modules.profile.model.BioData;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface BioDataRepo extends JpaRepository<BioData, Long> {
+public interface BioDataRepo extends JpaRepository<BioData, Long>, JpaSpecificationExecutor<BioData> {
+
+        long countByMembershipStatus_Name(String name);
+
         Optional<BioData> findByUser_Id(Long userId);
 
         Optional<BioData> findByUser_Email(String email);

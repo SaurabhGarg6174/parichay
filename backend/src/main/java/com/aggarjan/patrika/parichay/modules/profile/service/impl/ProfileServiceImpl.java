@@ -1,9 +1,11 @@
 package com.aggarjan.patrika.parichay.modules.profile.service.impl;
 
+import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSearchRequest;
 import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSubmissionRequest;
 import com.aggarjan.patrika.parichay.modules.profile.model.BioData;
 import com.aggarjan.patrika.parichay.modules.profile.model.MembershipStatus;
 import com.aggarjan.patrika.parichay.modules.profile.repo.BioDataRepo;
+import com.aggarjan.patrika.parichay.modules.profile.repo.BioDataSpecification;
 import com.aggarjan.patrika.parichay.modules.profile.repo.MembershipStatusRepo;
 import com.aggarjan.patrika.parichay.modules.profile.service.ProfileService;
 import com.aggarjan.patrika.parichay.core.exception.BadRequestException;
@@ -127,6 +129,30 @@ public class ProfileServiceImpl implements ProfileService {
         public Page<BioData> getAllBioDataByStatusId(Long statusId, Pageable pageable) {
                 return bioDataRepo.findAllByMembershipStatus_Id(statusId, pageable);
         }
+
+        @Override
+        public Page<BioData> searchBioData(BioDataSearchRequest request, Pageable pageable, String requesterEmail) {
+                var spec = BioDataSpecification.buildSearchSpec(request, requesterEmail);
+                return bioDataRepo.findAll(spec, pageable)
+                                .map(bioData -> maskBioDataIfNotActive(bioData, requesterEmail));
+        }
+
+        @Override
+        public BioData getAdminBioDataById(Long id) {
+                return bioDataRepo.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("BioData not found with id: " + id));
+        }
+
+        @Override
+        public java.util.Map<String, Long> getProfileStats() {
+                java.util.Map<String, Long> stats = new java.util.LinkedHashMap<>();
+                stats.put("PENDING", bioDataRepo.countByMembershipStatus_Name("PENDING"));
+                stats.put("APPROVED", bioDataRepo.countByMembershipStatus_Name("APPROVED"));
+                stats.put("REJECTED", bioDataRepo.countByMembershipStatus_Name("REJECTED"));
+                stats.put("ACTIVE", bioDataRepo.countByMembershipStatus_Name("ACTIVE"));
+                return stats;
+        }
+
 
         private BioData mapToBioData(BioDataSubmissionRequest request,
                         com.aggarjan.patrika.parichay.modules.auth.model.User user, MembershipStatus status) {

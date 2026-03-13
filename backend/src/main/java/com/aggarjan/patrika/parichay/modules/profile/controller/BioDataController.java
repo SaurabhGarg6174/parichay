@@ -1,5 +1,6 @@
 package com.aggarjan.patrika.parichay.modules.profile.controller;
 
+import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSearchRequest;
 import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSubmissionRequest;
 import com.aggarjan.patrika.parichay.modules.profile.model.BioData;
 import com.aggarjan.patrika.parichay.modules.profile.service.ProfileService;
@@ -64,4 +65,17 @@ public class BioDataController {
                                                                 principal != null ? principal.getName() : null),
                                                 "Profiles fetched successfully"));
         }
+
+        @GetMapping("/search")
+        public ResponseEntity<ApiResponse<Page<BioData>>> searchProfiles(
+                        BioDataSearchRequest request,
+                        @PageableDefault(size = 10, sort = "createdAt") Pageable pageable,
+                        java.security.Principal principal) {
+                return ResponseEntity
+                                .ok(ApiResponse.success(
+                                                profileService.searchBioData(request, pageable,
+                                                                principal != null ? principal.getName() : null),
+                                                "Profiles searched successfully"));
+        }
 }
+

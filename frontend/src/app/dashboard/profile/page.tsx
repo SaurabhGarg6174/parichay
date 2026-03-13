@@ -53,11 +53,26 @@ export default function Dashboard() {
         sistersUnmarried: 0
     });
 
+    const [lookups, setLookups] = useState<Record<string, any[]>>({});
+
     useEffect(() => {
         loadProfile();
+        fetchLookups();
     }, []);
 
+    const fetchLookups = async () => {
+        try {
+            const res = await api.get('/metadata/lookups');
+            if (res.data?.data) {
+                setLookups(res.data.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch lookups", error);
+        }
+    };
+
     const loadProfile = async () => {
+
         try {
             const { data } = await api.get('/profiles/me');
             if (data?.data) {
@@ -271,18 +286,14 @@ export default function Dashboard() {
                                     <label className="block text-sm font-medium mb-1">Gender</label>
                                     <select name="gender" value={formData.gender} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg text-gray-700">
                                         <option value="">Select Gender</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
+                                        {(lookups['GENDER'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Marital Status</label>
                                     <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg text-gray-700">
                                         <option value="">Select Status</option>
-                                        <option value="Never Married">Never Married</option>
-                                        <option value="Divorced">Divorced</option>
-                                        <option value="Widowed">Widowed</option>
-                                        <option value="Awaiting Divorce">Awaiting Divorce</option>
+                                        {(lookups['MARITAL_STATUS'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -319,7 +330,10 @@ export default function Dashboard() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Gotra <span className="text-red-500">*</span></label>
-                                    <input required name="gotra" value={formData.gotra} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg" />
+                                    <select required name="gotra" value={formData.gotra} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg text-gray-700">
+                                        <option value="">Select Gotra</option>
+                                        {(lookups['GOTRA'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
+                                    </select>
                                 </div>
 
                                 {/* Physical Attributes */}
@@ -369,9 +383,8 @@ export default function Dashboard() {
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Manglik Status</label>
                                     <select name="isManglik" value={formData.isManglik} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg text-gray-700">
-                                        <option value="no">No</option>
-                                        <option value="yes">Yes</option>
-                                        <option value="anshik">Anshik</option>
+                                        <option value="">Select Status</option>
+                                        {(lookups['MANGLIK_STATUS'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
                                     </select>
                                 </div>
                                 <div className="flex items-center mt-6">
@@ -387,16 +400,23 @@ export default function Dashboard() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Education</label>
-                                    <input name="education" value={formData.education} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg" />
+                                    <select name="education" value={formData.education} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg text-gray-700">
+                                        <option value="">Select Education</option>
+                                        {(lookups['EDUCATION'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Occupation</label>
-                                    <input name="occupation" value={formData.occupation} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg" />
+                                    <select name="occupation" value={formData.occupation} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg text-gray-700">
+                                        <option value="">Select Occupation</option>
+                                        {(lookups['OCCUPATION'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Monthly Income</label>
                                     <input type="number" name="monthlyIncome" value={formData.monthlyIncome} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg" />
                                 </div>
+
 
                                 {/* Family Details */}
                                 <div className="col-span-full mt-4">
