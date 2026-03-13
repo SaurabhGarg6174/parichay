@@ -21,6 +21,7 @@ import com.aggarjan.patrika.parichay.core.model.BaseEntity;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@lombok.EqualsAndHashCode(callSuper = true)
 public class User extends BaseEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

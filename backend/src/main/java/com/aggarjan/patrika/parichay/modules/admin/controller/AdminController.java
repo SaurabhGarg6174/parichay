@@ -10,6 +10,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
@@ -26,6 +28,13 @@ public class AdminController {
                 "Profiles fetched successfully"));
     }
 
+    @GetMapping("/profiles/{profileId}")
+    public ResponseEntity<ApiResponse<BioData>> getProfileById(@PathVariable Long profileId) {
+        return ResponseEntity.ok(ApiResponse.success(
+                profileService.getAdminBioDataById(profileId),
+                "Profile fetched successfully"));
+    }
+
     @PutMapping("/profiles/{profileId}/status/{statusId}")
     public ResponseEntity<ApiResponse<BioData>> updateProfileStatus(
             @PathVariable Long profileId,
@@ -34,4 +43,12 @@ public class AdminController {
                 profileService.updateProfileStatus(profileId, statusId),
                 "Profile status updated successfully"));
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getProfileStats() {
+        return ResponseEntity.ok(ApiResponse.success(
+                profileService.getProfileStats(),
+                "Stats fetched successfully"));
+    }
 }
+
