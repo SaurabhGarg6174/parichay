@@ -5,6 +5,8 @@ import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSubmissionReques
 import com.aggarjan.patrika.parichay.modules.profile.model.BioData;
 import com.aggarjan.patrika.parichay.modules.profile.service.ProfileService;
 import com.aggarjan.patrika.parichay.core.payload.ApiResponse;
+import com.aggarjan.patrika.parichay.core.payload.PagedResponse;
+import com.aggarjan.patrika.parichay.modules.metadata.service.ActionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*")
 public class BioDataController {
         private final ProfileService profileService;
+        private final ActionService actionService;
 
         @PostMapping
         public ResponseEntity<ApiResponse<BioData>> createProfile(
@@ -56,25 +59,27 @@ public class BioDataController {
         }
 
         @GetMapping
-        public ResponseEntity<ApiResponse<Page<BioData>>> getAllProfiles(
+        public ResponseEntity<ApiResponse<PagedResponse<BioData>>> getAllProfiles(
                         @PageableDefault(size = 10, sort = "createdAt") Pageable pageable,
                         java.security.Principal principal) {
+                Page<BioData> profiles = profileService.getAllBioData(pageable,
+                                principal != null ? principal.getName() : null);
                 return ResponseEntity
                                 .ok(ApiResponse.success(
-                                                profileService.getAllBioData(pageable,
-                                                                principal != null ? principal.getName() : null),
+                                                PagedResponse.from(profiles, actionService.getActionsByModuleAndStatus("USER_PROFILES", null)),
                                                 "Profiles fetched successfully"));
         }
 
         @GetMapping("/search")
-        public ResponseEntity<ApiResponse<Page<BioData>>> searchProfiles(
+        public ResponseEntity<ApiResponse<PagedResponse<BioData>>> searchProfiles(
                         BioDataSearchRequest request,
                         @PageableDefault(size = 10, sort = "createdAt") Pageable pageable,
                         java.security.Principal principal) {
+                Page<BioData> profiles = profileService.searchBioData(request, pageable,
+                                principal != null ? principal.getName() : null);
                 return ResponseEntity
                                 .ok(ApiResponse.success(
-                                                profileService.searchBioData(request, pageable,
-                                                                principal != null ? principal.getName() : null),
+                                                PagedResponse.from(profiles, actionService.getActionsByModuleAndStatus("USER_PROFILES", null)),
                                                 "Profiles searched successfully"));
         }
 }

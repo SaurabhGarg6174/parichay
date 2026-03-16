@@ -31,6 +31,12 @@ public class Menu {
     @Column(name = "order_index")
     private Integer orderIndex;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "menu_roles", joinColumns = @JoinColumn(name = "menu_id"))
+    @Column(name = "role_name")
+    @Builder.Default
+    private List<String> roles = new java.util.ArrayList<>();
+
     @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")
     @Builder.Default

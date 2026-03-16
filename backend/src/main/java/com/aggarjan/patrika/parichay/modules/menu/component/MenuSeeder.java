@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component
+// @Component
 @RequiredArgsConstructor
 public class MenuSeeder implements CommandLineRunner {
 
@@ -25,12 +25,23 @@ public class MenuSeeder implements CommandLineRunner {
                     .path("/dashboard")
                     .icon("Home")
                     .orderIndex(1)
+                    .roles(List.of("USER", "ADMIN"))
                     .build();
+            
+            Menu adminMenu = Menu.builder()
+                    .title("Admin Management")
+                    .icon("Settings")
+                    .orderIndex(2)
+                    .roles(List.of("ADMIN"))
+                    .build();
+            adminMenu.addSubMenu(SubMenu.builder().title("Review Profiles").path("/dashboard/admin/profiles").orderIndex(1).build());
+            adminMenu.addSubMenu(SubMenu.builder().title("User Management").path("/dashboard/admin/users").orderIndex(2).build());
 
             Menu profileMenu = Menu.builder()
                     .title("Profile Management")
                     .icon("User")
-                    .orderIndex(2)
+                    .orderIndex(3)
+                    .roles(List.of("USER"))
                     .build();
 
             profileMenu.addSubMenu(
@@ -40,7 +51,8 @@ public class MenuSeeder implements CommandLineRunner {
             Menu paymentMenu = Menu.builder()
                     .title("Payment")
                     .icon("CreditCard")
-                    .orderIndex(3)
+                    .orderIndex(4)
+                    .roles(List.of("USER"))
                     .build();
 
             paymentMenu.addSubMenu(
@@ -54,10 +66,11 @@ public class MenuSeeder implements CommandLineRunner {
                     .title("Settings")
                     .path("/dashboard/settings")
                     .icon("Settings")
-                    .orderIndex(4)
+                    .orderIndex(5)
+                    .roles(List.of("USER", "ADMIN"))
                     .build();
 
-            menuRepository.saveAll(List.of(dashboardMenu, profileMenu, paymentMenu, settingsMenu));
+            menuRepository.saveAll(List.of(dashboardMenu, adminMenu, profileMenu, paymentMenu, settingsMenu));
         }
     }
 }

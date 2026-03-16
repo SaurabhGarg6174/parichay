@@ -2,7 +2,9 @@ package com.aggarjan.patrika.parichay.core.config;
 
 import com.aggarjan.patrika.parichay.modules.auth.model.Role;
 import com.aggarjan.patrika.parichay.modules.auth.repo.RoleRepository;
+import com.aggarjan.patrika.parichay.modules.metadata.model.Action;
 import com.aggarjan.patrika.parichay.modules.metadata.model.Lookup;
+import com.aggarjan.patrika.parichay.modules.metadata.repo.ActionRepo;
 import com.aggarjan.patrika.parichay.modules.metadata.repo.LookupRepo;
 import com.aggarjan.patrika.parichay.modules.profile.model.MembershipStatus;
 import com.aggarjan.patrika.parichay.modules.profile.repo.MembershipStatusRepo;
@@ -14,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 import java.util.Map;
 
-@Configuration
+// @Configuration
 @RequiredArgsConstructor
 public class DataInitializer {
 
@@ -22,7 +24,8 @@ public class DataInitializer {
     public CommandLineRunner initData(
             RoleRepository roleRepository,
             MembershipStatusRepo membershipStatusRepo,
-            LookupRepo lookupRepo) {
+            LookupRepo lookupRepo,
+            ActionRepo actionRepo) {
         return args -> {
             // Roles
             List<String> roles = List.of("USER", "ADMIN");
@@ -74,7 +77,37 @@ public class DataInitializer {
                     }
                 }
             });
+
+            // Actions for Admin Profiles
+            seedProfileAction(actionRepo, "View", "VIEW", "Eye", "text-gray-500", "ADMIN_PROFILES", null, 1);
+            
+            // Pending Status (1) Actions
+            seedProfileAction(actionRepo, "Approve", "APPROVE", "Check", "text-emerald-600", "ADMIN_PROFILES", 1L, 2);
+            seedProfileAction(actionRepo, "Reject", "REJECT", "X", "text-rose-600", "ADMIN_PROFILES", 1L, 3);
+            
+            // Approved Status (2) Actions
+            seedProfileAction(actionRepo, "Activate", "ACTIVATE", "Play", "text-indigo-600", "ADMIN_PROFILES", 2L, 2);
+            
+            // Admin Users (for full table, not status specific)
+            seedProfileAction(actionRepo, "Edit", "EDIT", "Pencil", "text-indigo-600", "ADMIN_USERS", null, 1);
+            seedProfileAction(actionRepo, "Delete", "DELETE", "Trash", "text-rose-600", "ADMIN_USERS", null, 2);
         };
+    }
+
+    private void seedProfileAction(ActionRepo repo, String label, String code, String icon, String color, String module, Long statusId, int order) {
+        if (repo.findByTargetModuleAndActiveTrueOrderBySortOrderAsc(module).stream()
+                .noneMatch(a -> a.getCode().equals(code) && (statusId == null || statusId.equals(a.getTargetStatusId())))) {
+            repo.save(Action.builder()
+                    .label(label)
+                    .code(code)
+                    .icon(icon)
+                    .color(color)
+                    .targetModule(module)
+                    .targetStatusId(statusId)
+                    .sortOrder(order)
+                    .active(true)
+                    .build());
+        }
     }
 }
 
