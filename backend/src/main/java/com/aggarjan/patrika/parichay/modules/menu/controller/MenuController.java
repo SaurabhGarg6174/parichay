@@ -19,9 +19,9 @@ public class MenuController {
     private final MenuService menuService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Menu>>> getMenus() {
+    public ResponseEntity<ApiResponse<List<Menu>>> getMenus(java.security.Principal principal) {
         return ResponseEntity.ok(ApiResponse.success(
-                menuService.getAllMenus(),
+                menuService.getMenusForUser(principal != null ? principal.getName() : null),
                 "Menus fetched successfully"));
     }
 }
