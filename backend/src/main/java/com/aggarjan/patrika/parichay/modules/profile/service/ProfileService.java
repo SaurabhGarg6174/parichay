@@ -26,9 +26,10 @@ public interface ProfileService {
 
     BioData updateProfileStatus(Long bioDataId, Long statusId);
 
-    Page<BioData> getAllBioDataByStatusId(Long statusId, Pageable pageable);
+    Page<BioData> getAllBioDataByStatusId(Long statusId, String search, Pageable pageable);
 
     BioData getAdminBioDataById(Long id);
 
     Map<String, Long> getProfileStats();
+    BioData updateVerificationStatus(Long bioDataId, boolean verified);
 }

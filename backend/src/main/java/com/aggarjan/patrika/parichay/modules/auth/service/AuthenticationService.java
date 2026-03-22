@@ -122,7 +122,8 @@ public class AuthenticationService {
                                 user.getId(),
                                 user.getEmail(),
                                 profile.getFullName(),
-                                roles);
+                                roles,
+                                user.isEnabled());
         }
 
         public AuthenticationResponse refreshToken(String authHeader) {

@@ -6,5 +6,6 @@ public record UserDto(
         Long id,
         String email,
         String fullName,
-        Set<String> roles) {
+        Set<String> roles,
+        boolean enabled) {
 }

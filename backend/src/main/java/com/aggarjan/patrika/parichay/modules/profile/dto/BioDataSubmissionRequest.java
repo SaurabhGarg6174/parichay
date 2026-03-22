@@ -5,10 +5,14 @@ import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
 public record BioDataSubmissionRequest(
-                @NotBlank String fullName,
+                @NotBlank(message = "Full Name is required")
+                @Size(min = 3, max = 100, message = "Full Name must be between 3 and 100 characters")
+                String fullName,
                 String photoUrl,
                 String gender,
                 String maritalStatus,
+                @NotBlank(message = "Contact Number is required")
+                @Pattern(regexp = "^\\d{10}$", message = "Contact Number must be exactly 10 digits")
                 String contactNumber,
                 @NotNull LocalDate dob,
                 String birthTime,
@@ -21,7 +25,9 @@ public record BioDataSubmissionRequest(
                 String height,
                 String weight,
                 Boolean wearsSpectacles,
-                @NotBlank String gotra,
+                @NotBlank(message = "Gotra is required")
+                @Size(min = 3, max = 50, message = "Gotra must be between 3 and 50 characters")
+                String gotra,
                 String isManglik,
                 String education,
                 String occupation,

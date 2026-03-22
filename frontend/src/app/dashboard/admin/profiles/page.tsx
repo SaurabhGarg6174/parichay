@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { 
     Check, 
@@ -13,10 +13,16 @@ import {
     ChevronRight,
     MapPin,
     Calendar,
-    Briefcase
+    Briefcase,
+    ShieldCheck,
+    ShieldAlert,
+    TrendingUp,
+    FileCheck
 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Modal from '@/components/Modal';
+import { useToast } from '@/context/ToastContext';
 
 interface Profile {
     id: number;
@@ -30,11 +36,21 @@ interface Profile {
         id: number;
         name: string;
     };
+    verified: boolean;
+    contactNumber: string;
+}
+
+interface ProfileStats {
+    PENDING: number;
+    APPROVED: number;
+    REJECTED: number;
+    ACTIVE: number;
 }
 
 export default function AdminProfilesPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { showToast } = useToast();
     const { user, loading: authLoading } = useAuth();
     const statusFilter = searchParams.get('status') || 'PENDING';
     
@@ -44,6 +60,11 @@ export default function AdminProfilesPage() {
     const [totalPages, setTotalPages] = useState(0);
     const [statuses, setStatuses] = useState<{id: number, name: string}[]>([]);
     const [availableActions, setAvailableActions] = useState<any[]>([]);
+    const [stats, setStats] = useState<ProfileStats | null>(null);
+    const [search, setSearch] = useState('');
+    const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, title: string, message: string, action: () => void}>({
+        isOpen: false, title: '', message: '', action: () => {}
+    });
 
     useEffect(() => {
         if (!authLoading && (!user || !user.roles.includes('ADMIN'))) {
@@ -58,8 +79,12 @@ export default function AdminProfilesPage() {
                 if (res.data?.success) {
                     setStatuses(res.data.data);
                 }
-            } catch (error) {
-                console.error('Failed to fetch statuses', error);
+                const statsRes = await api.get('/admin/stats');
+                if (statsRes.data?.success) {
+                    setStats(statsRes.data.data);
+                }
+            } catch (error: any) {
+                showToast(error.response?.data?.message || 'Failed to fetch metadata', 'error');
             }
         };
         fetchStatuses();
@@ -73,7 +98,7 @@ export default function AdminProfilesPage() {
                 const statusObj = statuses.find(s => s.name === statusFilter);
                 if (statusObj || statuses.length > 0) {
                     const statusId = statusObj?.id || (statusFilter === 'PENDING' ? 1 : 4); // Fallback
-                    const res = await api.get(`/admin/profiles?statusId=${statusId}&page=${page}&size=10`);
+                    const res = await api.get(`/admin/profiles?statusId=${statusId}&page=${page}&size=10${search ? `&search=${search}` : ''}`);
                     if (res.data?.success) {
                         setProfiles(res.data.data.content);
                         setTotalPages(res.data.data.totalPages);
@@ -90,7 +115,7 @@ export default function AdminProfilesPage() {
         if (statuses.length > 0) {
             fetchProfiles();
         }
-    }, [statusFilter, page, statuses]);
+    }, [statusFilter, page, search, statuses]);
 
     const handleStatusUpdate = async (profileId: number, statusName: string) => {
         try {
@@ -99,11 +124,29 @@ export default function AdminProfilesPage() {
 
             const res = await api.put(`/admin/profiles/${profileId}/status/${statusObj.id}`);
             if (res.data?.success) {
-                // Remove from list or update
-                setProfiles(prev => prev.filter(p => p.id !== profileId));
+                // Remove from list if status changed
+                if (statusName !== statusFilter) {
+                    setProfiles(prev => prev.filter(p => p.id !== profileId));
+                }
+                showToast(`Profile ${statusName.toLowerCase()} successfully`, 'success');
+                // Refresh stats
+                const statsRes = await api.get('/admin/stats');
+                if (statsRes.data?.success) setStats(statsRes.data.data);
             }
-        } catch (error) {
-            console.error('Failed to update status', error);
+        } catch (error: any) {
+            showToast(error.response?.data?.message || 'Failed to update status', 'error');
+        }
+    };
+
+    const handleToggleVerification = async (profileId: number, currentVerified: boolean) => {
+        try {
+            const res = await api.put(`/admin/profiles/${profileId}/verify/${!currentVerified}`);
+            if (res.data?.success) {
+                setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, verified: !currentVerified } : p));
+                showToast(`Profile ${!currentVerified ? 'verified' : 'unverified'} successfully`, 'success');
+            }
+        } catch (error: any) {
+            showToast(error.response?.data?.message || 'Failed to update verification', 'error');
         }
     };
 
@@ -127,6 +170,26 @@ export default function AdminProfilesPage() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                    { label: 'Pending Review', value: stats?.PENDING || 0, icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50' },
+                    { label: 'Active Members', value: stats?.ACTIVE || 0, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { label: 'Approved', value: stats?.APPROVED || 0, icon: FileCheck, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { label: 'Rejected', value: stats?.REJECTED || 0, icon: ShieldAlert, color: 'text-rose-600', bg: 'bg-rose-50' },
+                ].map((item, i) => (
+                    <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+                        <div className={`p-4 rounded-2xl ${item.bg} ${item.color}`}>
+                            <item.icon className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{item.label}</p>
+                            <p className="text-2xl font-black text-gray-900 dark:text-white leading-tight">{item.value}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
             <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Review Profiles</h1>
@@ -159,7 +222,9 @@ export default function AdminProfilesPage() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input 
                             type="text" 
-                            placeholder="Search by name or ID..." 
+                            placeholder="Search by name or email..." 
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-slate-800/50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                         />
                     </div>
@@ -171,6 +236,8 @@ export default function AdminProfilesPage() {
                             <tr className="bg-gray-50/50 dark:bg-slate-800/30">
                                 <th className="px-8 py-5 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Member</th>
                                 <th className="px-8 py-5 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Details</th>
+                                <th className="px-8 py-5 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contact</th>
+                                <th className="px-8 py-5 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Verified Status</th>
                                 <th className="px-8 py-5 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                                 <th className="px-8 py-5 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
                             </tr>
@@ -182,12 +249,14 @@ export default function AdminProfilesPage() {
                                         <td className="px-8 py-6"><div className="h-12 w-12 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td>
                                         <td className="px-8 py-6"><div className="h-4 w-48 bg-gray-200 dark:bg-slate-700 rounded"></div></td>
                                         <td className="px-8 py-6"><div className="h-6 w-20 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td>
+                                        <td className="px-8 py-6"><div className="h-6 w-20 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td> {/* Added for new column */}
+                                        <td className="px-8 py-6"><div className="h-6 w-20 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td> {/* Added for new column */}
                                         <td className="px-8 py-6"><div className="h-8 w-24 bg-gray-200 dark:bg-slate-700 rounded ml-auto"></div></td>
                                     </tr>
                                 ))
                             ) : profiles.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-8 py-20 text-center">
+                                    <td colSpan={6} className="px-8 py-20 text-center"> {/* Updated colspan */}
                                         <div className="flex flex-col items-center">
                                             <Filter className="w-12 h-12 text-gray-300 mb-4" />
                                             <p className="text-gray-500 dark:text-gray-400 font-medium">No profiles found with status "{statusFilter}"</p>
@@ -199,16 +268,26 @@ export default function AdminProfilesPage() {
                                     <tr key={profile.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/20 transition-colors group">
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm">
-                                                    <Image 
-                                                        src={profile.photoUrl || '/placeholder-user.png'} 
-                                                        alt={profile.fullName}
-                                                        fill
-                                                        className="object-cover"
-                                                    />
+                                                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm bg-gray-100 flex items-center justify-center">
+                                                    {profile.photoUrl ? (
+                                                        <img 
+                                                            src={`${IMAGE_BASE_URL}${profile.photoUrl}`} 
+                                                            alt={profile.fullName}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-gray-400">NA</span>
+                                                    )}
                                                 </div>
-                                                <div>
-                                                    <p className="font-bold text-gray-900 dark:text-white">{profile.fullName}</p>
+                                                 <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-bold text-gray-900 dark:text-white">{profile.fullName}</p>
+                                                        {profile.verified && (
+                                                            <div title="Verified Member">
+                                                                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">ID: #{profile.id}</p>
                                                 </div>
                                             </div>
@@ -226,24 +305,50 @@ export default function AdminProfilesPage() {
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
+                                            <div className="flex flex-col gap-1.5 border-l-2 border-gray-100 dark:border-slate-800 pl-4">
+                                                <div className="flex items-center gap-2 text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tighter">
+                                                    {profile.contactNumber}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                    <Calendar className="w-3.5 h-3.5" />
+                                                    {new Date(profile.dob).toLocaleDateString()}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                                                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+                                                    {profile.verified ? 'Verified' : 'Unverified'}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 dark:text-gray-500">Contact verified via ID Proof</p>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
                                             <span className={`px-4 py-1.5 rounded-full text-xs font-bold ${getStatusColor(profile.membershipStatus.name)}`}>
                                                 {profile.membershipStatus.name}
                                             </span>
                                         </td>
                                         <td className="px-8 py-6 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center justify-end gap-2">
+
+
                                                 {availableActions.map((action) => (
                                                     <button 
                                                         key={action.code}
                                                         onClick={() => {
                                                             if (action.code === 'VIEW') {
                                                                 router.push(`/dashboard/admin/profiles/${profile.id}`);
-                                                            } else if (action.code === 'APPROVE') {
-                                                                handleStatusUpdate(profile.id, 'APPROVED');
-                                                            } else if (action.code === 'REJECT') {
-                                                                handleStatusUpdate(profile.id, 'REJECTED');
-                                                            } else if (action.code === 'ACTIVATE') {
-                                                                handleStatusUpdate(profile.id, 'ACTIVE');
+                                                            } else {
+                                                                setConfirmModal({
+                                                                    isOpen: true,
+                                                                    title: `Confirm ${action.label}`,
+                                                                    message: `Are you sure you want to ${action.label.toLowerCase()} this profile?`,
+                                                                    action: () => {
+                                                                        handleStatusUpdate(profile.id, action.code === 'ACTIVATE' ? 'ACTIVE' : action.code === 'APPROVE' ? 'APPROVED' : 'REJECTED');
+                                                                        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                                                                    }
+                                                                });
                                                             }
                                                         }}
                                                         className={`p-2 transition-all rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 ${action.color || 'text-gray-500'}`}
@@ -256,7 +361,15 @@ export default function AdminProfilesPage() {
                                                         {/* Fallback code-based icons if needed */}
                                                         {['VIEW', 'APPROVE', 'REJECT', 'ACTIVATE'].indexOf(action.code) === -1 && <span>{action.label}</span>}
                                                     </button>
-                                                ))}
+                                                 ))}
+
+                                                <button 
+                                                    onClick={() => handleToggleVerification(profile.id, profile.verified)}
+                                                    className={`p-2 transition-all rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 ${profile.verified ? 'text-emerald-600' : 'text-gray-400'}`}
+                                                    title={profile.verified ? 'Revoke Verification' : 'Verify Profile'}
+                                                >
+                                                    {profile.verified ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -288,6 +401,37 @@ export default function AdminProfilesPage() {
                     </div>
                 </div>
             </div>
+
+            <Modal 
+                isOpen={confirmModal.isOpen} 
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                title={confirmModal.title}
+                footer={
+                    <>
+                        <button 
+                            onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                            className="px-6 py-2.5 rounded-2xl text-sm font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            onClick={() => confirmModal.action()}
+                            className="px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 transition-all hover:scale-105"
+                        >
+                            Confirm
+                        </button>
+                    </>
+                }
+            >
+                <div className="flex items-start gap-4 text-gray-600 dark:text-gray-300">
+                    <div className="p-3 rounded-2xl bg-indigo-100 text-indigo-600">
+                        <Check className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p>{confirmModal.message}</p>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

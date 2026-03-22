@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import api from '@/lib/api';
+import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import {
     Search, MapPin, User as UserIcon, Calendar, Lock, Briefcase, GraduationCap,
-    Filter, ChevronLeft, ChevronRight, X, SlidersHorizontal
+    Filter, ChevronLeft, ChevronRight, X, SlidersHorizontal, Heart, ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
+import Modal from '@/components/Modal';
+import { useToast } from '@/context/ToastContext';
 
 interface BioData {
     id: number;
@@ -28,6 +30,7 @@ interface BioData {
     photoUrl: string;
     gotra: string;
     isManglik: string;
+    verified: boolean;
 }
 
 interface SearchFilters {
@@ -48,6 +51,7 @@ const INITIAL_FILTERS: SearchFilters = {
 
 export default function MatchesPage() {
     const { user } = useAuth();
+    const { showToast } = useToast();
     const [matches, setMatches] = useState<BioData[]>([]);
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState<SearchFilters>(INITIAL_FILTERS);
@@ -56,7 +60,9 @@ export default function MatchesPage() {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
+    const [availableActions, setAvailableActions] = useState<any[]>([]);
     const [lookups, setLookups] = useState<Record<string, any[]>>({});
+    const [shortlistModal, setShortlistModal] = useState<{isOpen: boolean, profileName: string}>({isOpen: false, profileName: ''});
 
     useEffect(() => {
         const fetchLookups = async () => {
@@ -65,8 +71,8 @@ export default function MatchesPage() {
                 if (res.data?.data) {
                     setLookups(res.data.data);
                 }
-            } catch (error) {
-                console.error("Failed to fetch lookups", error);
+            } catch (error: any) {
+                showToast(error.response?.data?.message || 'Failed to fetch lookups', 'error');
             }
         };
         fetchLookups();
@@ -103,9 +109,10 @@ export default function MatchesPage() {
                 setMatches(res.data.data.content || []);
                 setTotalPages(res.data.data.totalPages || 0);
                 setTotalElements(res.data.data.totalElements || 0);
+                setAvailableActions(res.data.data.actions || []);
             }
-        } catch (error) {
-            console.error("Failed to fetch matches", error);
+        } catch (error: any) {
+            showToast(error.response?.data?.message || 'Failed to fetch matches', 'error');
         } finally {
             setLoading(false);
         }
@@ -376,7 +383,7 @@ export default function MatchesPage() {
                                     <div className="absolute -bottom-10 left-6">
                                         <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-2xl shadow-sm flex items-center justify-center border-4 border-white dark:border-slate-800 transform rotate-3 transition-transform group-hover:rotate-0 overflow-hidden">
                                             {match.photoUrl ? (
-                                                <img src={`http://localhost:8081${match.photoUrl}`} alt={match.fullName} className="w-full h-full object-cover" />
+                                                <img src={`${IMAGE_BASE_URL}${match.photoUrl}`} alt={match.fullName} className="w-full h-full object-cover" />
                                             ) : (
                                                 <UserIcon className="w-10 h-10 text-gray-300 dark:text-gray-500" />
                                             )}
@@ -394,7 +401,14 @@ export default function MatchesPage() {
 
                                 {/* Card Body */}
                                 <div className="pt-12 pb-6 px-6 flex-1 flex flex-col">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">{match.fullName}</h3>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{match.fullName}</h3>
+                                        {match.verified && (
+                                            <div title="Verified Profile">
+                                                <ShieldCheck className="w-5 h-5 text-emerald-500 fill-emerald-50 dark:fill-emerald-500/10" />
+                                            </div>
+                                        )}
+                                    </div>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{match.height ? `${match.height} • ` : ''}{match.gender || 'Not specified'}</p>
 
                                     <div className="space-y-3 flex-1 border-t border-gray-50 dark:border-slate-800/50 pt-4">
@@ -420,6 +434,23 @@ export default function MatchesPage() {
                                         <Link href={`/dashboard/matches/${match.id}`} className="flex-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-center py-2.5 rounded-lg font-medium text-sm hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors">
                                             View Full Profile
                                         </Link>
+                                        
+                                        {availableActions.filter(a => a.code !== 'VIEW').map(action => (
+                                            <button 
+                                                key={action.code}
+                                                onClick={() => {
+                                                    if (action.code === 'SHORTLIST') {
+                                                        setShortlistModal({ isOpen: true, profileName: match.fullName });
+                                                    }
+                                                }}
+                                                className={`p-2.5 rounded-lg border transition-all ${action.code === 'SHORTLIST' ? 'border-rose-100 bg-rose-50 text-rose-500 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10' : 'border-gray-100 bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                                                title={action.label}
+                                            >
+                                                {action.code === 'SHORTLIST' && <Heart className="w-5 h-5" />}
+                                                {action.code !== 'SHORTLIST' && <span>{action.label}</span>}
+                                            </button>
+                                        ))}
+
                                         {isLocked(match.contactNumber) && (
                                             <Link href="/dashboard/profile" className="flex-1 bg-gray-900 dark:bg-slate-700 text-white text-center py-2.5 rounded-lg font-medium text-sm hover:bg-black dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2">
                                                 <Lock className="w-4 h-4" /> Unlock
@@ -457,6 +488,27 @@ export default function MatchesPage() {
                     )}
                 </>
             )}
+
+            <Modal 
+                isOpen={shortlistModal.isOpen}
+                onClose={() => setShortlistModal({ isOpen: false, profileName: '' })}
+                title="Profile Shortlisted"
+                footer={
+                    <button 
+                        onClick={() => setShortlistModal({ isOpen: false, profileName: '' })}
+                        className="px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 transition-all hover:scale-105"
+                    >
+                        Great!
+                    </button>
+                }
+            >
+                <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300">
+                    <div className="p-3 bg-rose-100 text-rose-600 rounded-2xl">
+                        <Heart className="w-6 h-6 fill-current" />
+                    </div>
+                    <p>You have successfully shortlisted <strong>{shortlistModal.profileName}</strong>. You can view all your shortlisted profiles in the dashboard.</p>
+                </div>
+            </Modal>
         </div>
     );
 }

@@ -46,6 +46,9 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserDto>> getCurrentUser(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("Unauthorized", "No principal found in security context"));
+        }
         return ResponseEntity.ok(
                 ApiResponse.success(service.getCurrentUser(principal.getName()), "User details fetched successfully"));
     }

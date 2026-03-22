@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { CreditCard, CheckCircle, Pencil, User as UserIcon } from 'lucide-react';
+import { CreditCard, CheckCircle, Pencil, User as UserIcon, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import Link from 'next/link';
 
 const FieldView = ({ label, value }: { label: string, value: any }) => (
     <div className="mb-4 bg-gray-50/50 dark:bg-slate-800/50 p-3 rounded-lg border border-gray-100/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
@@ -52,6 +53,46 @@ export default function Dashboard() {
         sistersMarried: 0,
         sistersUnmarried: 0
     });
+
+    // Modern Date Picker Logic
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+    const [viewDate, setViewDate] = useState(new Date());
+    const [calendarView, setCalendarView] = useState<'days' | 'years' | 'months'>('days');
+
+    const dobValue = formData.dob ? (() => {
+        const [y, m, d] = formData.dob.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    })() : null;
+
+    const handleDateSelect = (date: Date) => {
+        // Fix for timezone issues: Format the local date manually into YYYY-MM-DD
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const formattedDate = `${y}-${m}-${d}`;
+        setFormData(prev => ({ ...prev, dob: formattedDate }));
+        setIsDatePickerOpen(false);
+    };
+
+    const generateDays = (date: Date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const start = new Date(year, month, 1);
+        const end = new Date(year, month + 1, 0);
+        
+        const days = [];
+        // Pad start
+        for (let i = 0; i < start.getDay(); i++) {
+            days.push(null);
+        }
+        for (let i = 1; i <= end.getDate(); i++) {
+            days.push(new Date(year, month, i));
+        }
+        return days;
+    };
+
+    const yearRange = Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 15 - i);
+    const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     const [lookups, setLookups] = useState<Record<string, any[]>>({});
 
@@ -172,15 +213,14 @@ export default function Dashboard() {
 
         try {
             setPopup({ show: true, message: 'Uploading image...', type: 'success' });
-            const res = await api.post('/files/upload', formDataFile, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const res = await api.post('/files/upload', formDataFile);
             if (res.data?.data) {
                 setFormData(prev => ({ ...prev, photoUrl: res.data.data }));
                 setPopup({ show: true, message: 'Image uploaded successfully!', type: 'success' });
             }
         } catch (err: any) {
-            setPopup({ show: true, message: 'Failed to upload image', type: 'error' });
+            const errorMessage = err.response?.data?.message || 'Failed to upload image';
+            setPopup({ show: true, message: errorMessage, type: 'error' });
         }
     };
 
@@ -231,10 +271,11 @@ export default function Dashboard() {
                 </div>
             )}
 
-            <h1 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">My Dashboard</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-gray-900 dark:text-white">My Profile</h1>
 
-            <div className="grid md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-5 md:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+
                     <div className="flex justify-between items-center mb-6 border-b dark:border-slate-800 pb-4">
                         <h2 className="text-xl font-semibold text-indigo-700 dark:text-indigo-400">{isEditing ? 'Bio-Data Form' : 'Profile Details'}</h2>
                         {!isEditing && (
@@ -254,22 +295,23 @@ export default function Dashboard() {
 
                             <div className="col-span-full mb-4">
                                 <h3 className="text-lg font-medium border-b dark:border-slate-800 pb-2 mb-4 text-gray-900 dark:text-gray-100">Profile Photo</h3>
-                                <div className="flex items-center gap-6">
+                                <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6">
                                     <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-slate-800 overflow-hidden border-2 border-dashed border-gray-300 dark:border-slate-600 flex items-center justify-center shrink-0">
                                         {formData.photoUrl ? (
-                                            <img src={`http://localhost:8081${formData.photoUrl}`} alt="Profile" className="w-full h-full object-cover" />
+                                            <img src={`${IMAGE_BASE_URL}${formData.photoUrl}`} alt="Profile" className="w-full h-full object-cover" />
                                         ) : (
                                             <UserIcon className="w-10 h-10 text-gray-400 dark:text-gray-500" />
                                         )}
                                     </div>
-                                    <div className="flex-1">
+                                    <div className="text-center sm:text-left flex-1">
                                         <label className="cursor-pointer bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-block">
                                             <span>Choose Image</span>
                                             <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                                         </label>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">JPG, PNG or GIF. Max size 5MB.</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">JPG, PNG. Max size 10MB.</p>
                                     </div>
                                 </div>
+
                             </div>
 
                             {/* Personal Details */}
@@ -280,7 +322,7 @@ export default function Dashboard() {
 
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Full Name <span className="text-red-500">*</span></label>
-                                    <input required name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg" />
+                                    <input required minLength={3} maxLength={100} name="fullName" value={formData.fullName} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Gender</label>
@@ -298,11 +340,102 @@ export default function Dashboard() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Contact Number</label>
-                                    <input type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg" />
+                                    <input type="tel" pattern="[0-9]{10}" maxLength={10} name="contactNumber" value={formData.contactNumber} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg" placeholder="10-digit mobile number" />
                                 </div>
-                                <div>
+                                <div className="relative">
                                     <label className="block text-sm font-medium mb-1">Date of Birth <span className="text-red-500">*</span></label>
-                                    <input required type="date" name="dob" value={formData.dob} onChange={handleChange} className="w-full border px-3 py-2 rounded-lg" />
+                                    <button 
+                                        type="button"
+                                        onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                                        className="w-full flex items-center justify-between border px-3 py-2.5 rounded-xl bg-white dark:bg-slate-800 dark:border-slate-700 hover:border-indigo-400 transition-all text-left"
+                                    >
+                                        <span className={formData.dob ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
+                                            {formData.dob ? new Date(formData.dob).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : 'Select date'}
+                                        </span>
+                                        <Calendar className="w-5 h-5 text-gray-400" />
+                                    </button>
+
+                                    {isDatePickerOpen && (
+                                        <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-2xl p-4 w-[280px] sm:w-[320px] animate-in fade-in slide-in-from-top-2 overflow-hidden">
+
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-1">
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setCalendarView(calendarView === 'months' ? 'days' : 'months')}
+                                                        className="font-bold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-800 px-2 py-1 rounded-lg"
+                                                    >
+                                                        {monthLabels[viewDate.getMonth()]}
+                                                    </button>
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setCalendarView(calendarView === 'years' ? 'days' : 'years')}
+                                                        className="font-bold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-800 px-2 py-1 rounded-lg"
+                                                    >
+                                                        {viewDate.getFullYear()}
+                                                    </button>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <button type="button" onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)))} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"><ChevronLeft className="w-4 h-4" /></button>
+                                                    <button type="button" onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)))} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"><ChevronRight className="w-4 h-4" /></button>
+                                                </div>
+                                            </div>
+
+                                            {calendarView === 'days' && (
+                                                <>
+                                                    <div className="grid grid-cols-7 gap-1 mb-2">
+                                                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+                                                            <div key={d} className="text-center text-[10px] uppercase font-bold text-gray-400 tracking-wider">{d}</div>
+                                                        ))}
+                                                    </div>
+                                                    <div className="grid grid-cols-7 gap-1">
+                                                        {generateDays(viewDate).map((day, i) => (
+                                                            <button
+                                                                key={i}
+                                                                type="button"
+                                                                disabled={!day}
+                                                                onClick={() => day && handleDateSelect(day)}
+                                                                className={`h-9 w-9 rounded-xl text-sm flex items-center justify-center transition-all ${!day ? 'invisible' : dobValue && day.toDateString() === dobValue.toDateString() ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-gray-700 dark:text-gray-300'}`}
+                                                            >
+                                                                {day?.getDate()}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {calendarView === 'years' && (
+                                                <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    {yearRange.map(y => (
+                                                        <button
+                                                            key={y}
+                                                            type="button"
+                                                            onClick={() => { setViewDate(new Date(viewDate.setFullYear(y))); setCalendarView('days'); }}
+                                                            className={`py-2 rounded-xl text-sm font-medium ${viewDate.getFullYear() === y ? 'bg-indigo-600 text-white' : 'hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300'}`}
+                                                        >
+                                                            {y}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {calendarView === 'months' && (
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {monthLabels.map((m, i) => (
+                                                        <button
+                                                            key={m}
+                                                            type="button"
+                                                            onClick={() => { setViewDate(new Date(viewDate.setMonth(i))); setCalendarView('days'); }}
+                                                            className={`py-3 rounded-xl text-sm font-medium ${viewDate.getMonth() === i ? 'bg-indigo-600 text-white' : 'hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300'}`}
+                                                        >
+                                                            {m}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    <input type="hidden" name="dob" value={formData.dob} required />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1">Birth Time</label>
@@ -466,21 +599,22 @@ export default function Dashboard() {
                     ) : (
                         <div className="space-y-6 mt-4">
                             {/* Personal Details View */}
-                            <div className="flex items-center gap-6 mb-8 border-b dark:border-slate-800 pb-6">
-                                <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-slate-800 overflow-hidden border-4 border-white dark:border-slate-700 shadow-sm shrink-0">
+                             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6 mb-8 border-b dark:border-slate-800 pb-6">
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gray-100 dark:bg-slate-800 overflow-hidden border-4 border-white dark:border-slate-700 shadow-sm shrink-0">
                                     {profile?.photoUrl ? (
-                                        <img src={`http://localhost:8081${profile.photoUrl}`} alt={profile.fullName} className="w-full h-full object-cover" />
+                                        <img src={`${IMAGE_BASE_URL}${profile.photoUrl}`} alt={profile.fullName} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30 text-indigo-300 dark:text-indigo-400">
-                                            <UserIcon className="w-12 h-12" />
+                                            <UserIcon className="w-10 h-10 md:w-12 md:h-12" />
                                         </div>
                                     )}
                                 </div>
-                                <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{profile?.fullName}</h2>
-                                    <p className="text-gray-500 dark:text-gray-400">{profile?.occupation || 'Occupation not specified'}</p>
+                                <div className="text-center sm:text-left">
+                                    <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{profile?.fullName}</h2>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">{profile?.occupation || 'Occupation not specified'}</p>
                                 </div>
                             </div>
+
 
                             <h3 className="text-lg font-medium border-b dark:border-slate-800 pb-2 mb-4 text-gray-800 dark:text-gray-200">Personal Details</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
