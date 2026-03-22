@@ -1,4 +1,4 @@
-'use client';
+'use client'; 
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -42,15 +42,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setExpandedMenus(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
-    const getIcon = (iconName: string) => {
+    const getIcon = (iconName: string, active: boolean) => {
+        const iconClasses = `w-5 h-5 transition-colors ${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300'}`;
         switch (iconName) {
-            case 'Home': return <Home className="w-5 h-5 text-gray-500" />;
-            case 'User': return <User className="w-5 h-5 text-gray-500" />;
-            case 'Settings': return <Settings className="w-5 h-5 text-gray-500" />;
-            case 'CreditCard': return <CreditCard className="w-5 h-5 text-gray-500" />;
-            default: return <User className="w-5 h-5 text-gray-500" />;
+            case 'Home': return <Home className={iconClasses} />;
+            case 'User': return <User className={iconClasses} />;
+            case 'Settings': return <Settings className={iconClasses} />;
+            case 'CreditCard': return <CreditCard className={iconClasses} />;
+            default: return <User className={iconClasses} />;
         }
     };
+
 
     return (
         <div className="flex min-h-screen">
@@ -70,39 +72,53 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             const isExpanded = expandedMenus[menu.id];
 
                             return (
-                                <div key={menu.id} className="mb-2">
+                                <div key={menu.id} className="mb-1">
+
                                     {menu.path ? (
-                                        <Link href={menu.path} className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActiveMenu ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'}`}>
-                                            <span className="mr-3">{getIcon(menu.icon)}</span>
+                                        <Link 
+                                            href={menu.path} 
+                                            className={`group flex items-center px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActiveMenu ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-gray-200'}`}
+                                        >
+                                            <span className="mr-3.5 transform transition-transform group-hover:scale-110">
+                                                {getIcon(menu.icon, isActiveMenu)}
+                                            </span>
                                             {menu.title}
                                         </Link>
                                     ) : (
                                         <div
                                             onClick={() => toggleMenu(menu.id)}
-                                            className="px-3 py-2.5 flex items-center justify-between text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                            className={`group px-3 py-2.5 flex items-center justify-between text-sm font-semibold cursor-pointer rounded-xl transition-all ${isExpanded ? 'bg-gray-50/50 dark:bg-slate-800/30 text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
                                         >
-                                            <div className="flex items-center uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                                <span className="mr-3">{getIcon(menu.icon)}</span>
+                                            <div className="flex items-center">
+                                                <span className="mr-3.5 transform transition-transform group-hover:scale-110">
+                                                    {getIcon(menu.icon, isExpanded)}
+                                                </span>
                                                 {menu.title}
                                             </div>
                                             {menu.subMenus && menu.subMenus.length > 0 && (
-                                                isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400 dark:text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-indigo-500' : ''}`} />
                                             )}
                                         </div>
                                     )}
 
+
                                     {menu.subMenus && menu.subMenus.length > 0 && isExpanded && (
-                                        <div className="ml-8 mt-1 space-y-1">
+                                        <div className="ml-5 mt-1 border-l-2 border-gray-100 dark:border-slate-800 pl-4 space-y-1 animate-in slide-in-from-top-1 duration-200">
                                             {menu.subMenus.map((sub: any) => {
                                                 const isActiveSub = pathname === sub.path;
                                                 return (
-                                                    <Link key={sub.id} href={sub.path} className={`flex px-3 py-2 rounded-lg text-sm transition-colors ${isActiveSub ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 font-medium' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-gray-200'}`}>
+                                                    <Link 
+                                                        key={sub.id} 
+                                                        href={sub.path} 
+                                                        className={`flex px-3 py-2 rounded-lg text-sm transition-all ${isActiveSub ? 'text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50/50 dark:bg-indigo-500/5' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50/50 dark:hover:bg-slate-800/30'}`}
+                                                    >
                                                         {sub.title}
                                                     </Link>
                                                 );
                                             })}
                                         </div>
                                     )}
+
                                 </div>
                             );
                         })}

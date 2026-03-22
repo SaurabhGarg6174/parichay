@@ -126,7 +126,10 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         @Override
-        public Page<BioData> getAllBioDataByStatusId(Long statusId, Pageable pageable) {
+        public Page<BioData> getAllBioDataByStatusId(Long statusId, String search, Pageable pageable) {
+                if (search != null && !search.trim().isEmpty()) {
+                        return bioDataRepo.searchByStatus(statusId, search, pageable);
+                }
                 return bioDataRepo.findAllByMembershipStatus_Id(statusId, pageable);
         }
 
@@ -151,6 +154,16 @@ public class ProfileServiceImpl implements ProfileService {
                 stats.put("REJECTED", bioDataRepo.countByMembershipStatus_Name("REJECTED"));
                 stats.put("ACTIVE", bioDataRepo.countByMembershipStatus_Name("ACTIVE"));
                 return stats;
+        }
+
+        @Override
+        @Transactional
+        public BioData updateVerificationStatus(Long bioDataId, boolean verified) {
+                BioData bioData = bioDataRepo.findById(bioDataId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "BioData not found with id: " + bioDataId));
+                bioData.setVerified(verified);
+                return bioDataRepo.save(bioData);
         }
 
 

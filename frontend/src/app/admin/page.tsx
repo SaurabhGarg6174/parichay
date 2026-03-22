@@ -28,7 +28,7 @@ export default function AdminDashboard() {
     const [statusId, setStatusId] = useState<number | null>(null);
 
     useEffect(() => {
-        if (user?.roles?.some(r => r.name === 'ADMIN')) {
+        if (user?.roles?.includes('ADMIN')) {
             fetchStatuses();
             fetchStats();
         }
@@ -221,19 +221,23 @@ export default function AdminDashboard() {
                                                         const id = getStatusId('APPROVED');
                                                         if (id) updateStatus(p.id, id);
                                                     }}
-                                                    className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 border border-green-200 dark:border-green-900/50 hover:bg-green-50 dark:hover:bg-green-900/20 px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors text-xs"
+                                                    className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 border border-green-200 dark:border-green-900/50 hover:bg-green-50 dark:hover:bg-green-900/20 px-2.5 py-1.5 rounded-md flex items-center gap-1 transition-colors text-xs"
+                                                    title="Approve"
                                                 >
-                                                    <CheckCircle className="w-3.5 h-3.5" /> Approve
+                                                    <CheckCircle className="w-4 h-4" /> <span className="hidden sm:inline">Approve</span>
                                                 </button>
+
                                                 <button
                                                     onClick={() => {
                                                         const id = getStatusId('REJECTED');
                                                         if (id) updateStatus(p.id, id);
                                                     }}
-                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors text-xs"
+                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 px-2.5 py-1.5 rounded-md flex items-center gap-1 transition-colors text-xs"
+                                                    title="Reject"
                                                 >
-                                                    <XCircle className="w-3.5 h-3.5" /> Reject
+                                                    <XCircle className="w-4 h-4" /> <span className="hidden sm:inline">Reject</span>
                                                 </button>
+
                                             </div>
                                         </td>
                                     </tr>

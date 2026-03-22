@@ -43,6 +43,9 @@ public class User extends BaseEntity implements UserDetails {
     @lombok.EqualsAndHashCode.Exclude
     private UserProfile profile;
 
+    @Builder.Default
+    private boolean enabled = true;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
@@ -72,6 +75,6 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 }

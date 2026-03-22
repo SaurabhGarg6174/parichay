@@ -12,6 +12,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.aggarjan.patrika.parichay.modules.auth.dto.CreateUserRequest;
 import com.aggarjan.patrika.parichay.modules.auth.dto.UserDto;
 import com.aggarjan.patrika.parichay.modules.auth.service.UserService;
 import java.util.Map;
@@ -29,8 +30,10 @@ public class AdminController {
     @GetMapping("/profiles")
     public ResponseEntity<ApiResponse<PagedResponse<BioData>>> getProfilesByStatus(
             @RequestParam Long statusId,
+            @RequestParam(required = false) String search,
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
-        Page<BioData> profiles = profileService.getAllBioDataByStatusId(statusId, pageable);
+        Page<BioData> profiles = profileService.getAllBioDataByStatusId(statusId, search, pageable);
+        // ... filter by search if present
         return ResponseEntity.ok(ApiResponse.success(
                 PagedResponse.from(profiles, actionService.getActionsByModuleAndStatus("ADMIN_PROFILES", statusId)),
                 "Profiles fetched successfully"));
@@ -59,13 +62,53 @@ public class AdminController {
                 "Stats fetched successfully"));
     }
 
+    @PutMapping("/profiles/{profileId}/verify/{verified}")
+    public ResponseEntity<ApiResponse<BioData>> updateProfileVerification(
+            @PathVariable Long profileId,
+            @PathVariable boolean verified) {
+        return ResponseEntity.ok(ApiResponse.success(
+                profileService.updateVerificationStatus(profileId, verified),
+                "Profile verification status updated successfully"));
+    }
+
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<PagedResponse<UserDto>>> getAllUsers(
+            @RequestParam(defaultValue = "true") boolean enabled,
             @PageableDefault(size = 10) Pageable pageable) {
-        Page<UserDto> users = userService.getAllUsers(pageable);
+        Page<UserDto> users = userService.getAllUsersByStatus(enabled, pageable);
         return ResponseEntity.ok(ApiResponse.success(
                 PagedResponse.from(users, actionService.getActionsByModuleAndStatus("ADMIN_USERS", null)),
                 "Users fetched successfully"));
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<ApiResponse<UserDto>> createUser(@RequestBody CreateUserRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                userService.createUser(request),
+                "User created successfully"));
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(ApiResponse.success(null, "User deleted successfully"));
+    }
+
+    @PutMapping("/users/{userId}/status/{active}")
+    public ResponseEntity<ApiResponse<Void>> updateUserStatus(
+            @PathVariable Long userId,
+            @PathVariable boolean active) {
+        userService.updateUserStatus(userId, active);
+        return ResponseEntity.ok(ApiResponse.success(null, "User status updated successfully"));
+    }
+
+    @PutMapping("/users/{userId}")
+    public ResponseEntity<ApiResponse<UserDto>> updateUser(
+            @PathVariable Long userId,
+            @RequestBody UserDto userDto) {
+        return ResponseEntity.ok(ApiResponse.success(
+                userService.updateUser(userId, userDto),
+                "User updated successfully"));
     }
 }
 

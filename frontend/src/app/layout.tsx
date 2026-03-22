@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { ToastProvider } from '@/context/ToastContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,10 +23,12 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <AuthProvider>
-            <Navbar />
-            <main className="flex-grow">
-              {children}
-            </main>
+            <ToastProvider>
+              <Navbar />
+              <main className="flex-grow">
+                {children}
+              </main>
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

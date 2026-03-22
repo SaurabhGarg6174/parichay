@@ -10,4 +10,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(@Email(message = "Invalid email format") @NotBlank(message = "Email is required") String email);
+
+    org.springframework.data.domain.Page<User> findByEnabled(boolean enabled, org.springframework.data.domain.Pageable pageable);
 }

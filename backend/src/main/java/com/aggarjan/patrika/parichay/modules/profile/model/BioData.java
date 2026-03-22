@@ -55,9 +55,12 @@ public class BioData extends BaseEntity {
     private Integer sistersMarried;
     private Integer sistersUnmarried;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "status_id")
     private MembershipStatus membershipStatus;
+
+    @Builder.Default
+    private boolean isVerified = false;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

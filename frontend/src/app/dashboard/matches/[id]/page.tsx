@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, MapPin, Calendar, Lock, Phone, User as UserIcon, Building2, Book, Award, Briefcase } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Lock, Phone, User as UserIcon, Building2, Book, Award, Briefcase, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MatchDetailPage() {
@@ -83,7 +83,7 @@ export default function MatchDetailPage() {
                 <div className="px-8 pb-8 flex flex-col sm:flex-row gap-6 items-start relative">
                     <div className="w-32 h-32 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border-4 border-white dark:border-slate-800 flex items-center justify-center -mt-16 flex-shrink-0 relative z-10 overflow-hidden">
                         {profile.photoUrl ? (
-                            <img src={`http://localhost:8081${profile.photoUrl}`} alt={profile.fullName} className="w-full h-full object-cover" />
+                            <img src={`${IMAGE_BASE_URL}${profile.photoUrl}`} alt={profile.fullName} className="w-full h-full object-cover" />
                         ) : (
                             <UserIcon className="w-16 h-16 text-gray-300 dark:text-gray-500" />
                         )}
@@ -92,7 +92,14 @@ export default function MatchDetailPage() {
                     <div className="flex-1 pt-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{profile.fullName}</h1>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{profile.fullName}</h1>
+                                    {profile.verified && (
+                                        <div title="Verified Profile">
+                                            <ShieldCheck className="w-6 h-6 text-emerald-500" />
+                                        </div>
+                                    )}
+                                </div>
                                 <p className="text-lg text-gray-600 dark:text-gray-400 flex items-center gap-2">
                                     {profile.height ? `${profile.height} • ` : ''}{profile.gender || 'Not specified'}
                                     <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
