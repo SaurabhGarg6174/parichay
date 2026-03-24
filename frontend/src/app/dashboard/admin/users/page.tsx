@@ -16,7 +16,9 @@ import {
     Pencil,
     Trash2,
     CheckCircle,
-    Slash
+    Slash,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Modal from '@/components/Modal';
@@ -47,6 +49,7 @@ export default function AdminUsersPage() {
     const [confirmModal, setConfirmModal] = useState<{isOpen: boolean, title: string, message: string, action: () => void}>({
         isOpen: false, title: '', message: '', action: () => {}
     });
+    const [showCreatePassword, setShowCreatePassword] = useState(false);
 
     const fetchUsers = useCallback(async () => {
         setLoading(true);
@@ -491,14 +494,23 @@ export default function AdminUsersPage() {
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                             <input 
-                                type="password"
+                                type={showCreatePassword ? 'text' : 'password'}
                                 placeholder="Minimum 6 characters"
                                 value={createModal.user.password}
                                 onChange={(e) => setCreateModal(prev => ({...prev, user: {...prev.user, password: e.target.value}}))}
-                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-slate-800/50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                className="w-full pl-12 pr-12 py-3.5 bg-gray-50 dark:bg-slate-800/50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                                 required
                                 minLength={6}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowCreatePassword(prev => !prev)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-500 transition-colors"
+                                tabIndex={-1}
+                                aria-label={showCreatePassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showCreatePassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
                         </div>
                     </div>
 
