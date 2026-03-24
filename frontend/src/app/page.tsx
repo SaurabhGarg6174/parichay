@@ -11,8 +11,8 @@ export default function Home() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        if (user.roles?.some(r => r.name === 'ADMIN')) {
-          router.push('/admin');
+        if (user.roles?.includes('ADMIN')) {
+          router.push('/dashboard');
         } else {
           router.push('/dashboard');
         }

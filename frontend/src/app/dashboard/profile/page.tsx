@@ -226,14 +226,50 @@ export default function Dashboard() {
 
     const handleMakePayment = async () => {
         try {
+            setPopup({ show: true, message: 'Initiating payment...', type: 'success' });
             const { data } = await api.post('/payments/initiate', { amount: 500, currency: 'INR' });
             const orderId = data.data.orderId;
+            closePopup();
 
-            await api.post('/payments/verify', { orderId, paymentId: 'PAY_' + Date.now(), success: true });
-            setPopup({ show: true, message: 'Payment Successful & profile activated!', type: 'success' });
-            loadProfile();
+            const options = {
+                key: 'rzp_test_SVATz6ya6yetjJ',
+                amount: 500 * 100,
+                currency: "INR",
+                name: "Parichay",
+                description: "Membership Fee",
+                order_id: orderId,
+                handler: async function (response: any) {
+                    try {
+                        setPopup({ show: true, message: 'Verifying payment...', type: 'success' });
+                        await api.post('/payments/verify', { 
+                            orderId: response.razorpay_order_id, 
+                            paymentId: response.razorpay_payment_id, 
+                            razorpaySignature: response.razorpay_signature 
+                        });
+                        setPopup({ show: true, message: 'Payment Successful & profile activated!', type: 'success' });
+                        loadProfile();
+                    } catch (err: any) {
+                        setPopup({ show: true, message: err.response?.data?.message || 'Payment verification failed', type: 'error' });
+                    }
+                },
+                prefill: {
+                    name: profile?.fullName || "",
+                    email: user?.email || "",
+                    contact: profile?.contactNumber || ""
+                },
+                theme: {
+                    color: "#4f46e5"
+                }
+            };
+            
+            const rzp = new (window as any).Razorpay(options);
+            rzp.on('payment.failed', function (response: any) {
+                setPopup({ show: true, message: response.error.description || 'Payment Failed', type: 'error' });
+            });
+            rzp.open();
+
         } catch (err: any) {
-            setPopup({ show: true, message: err.response?.data?.message || 'Payment simulation failed', type: 'error' });
+            setPopup({ show: true, message: err.response?.data?.message || 'Failed to initiate payment', type: 'error' });
         }
     };
 
@@ -680,25 +716,45 @@ export default function Dashboard() {
                             </div>
                         )}
 
-                        <div className="mt-6 pt-6 border-t border-gray-100 dark:border-slate-800">
-                            <h3 className="font-semibold mb-2 flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                                <CreditCard className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                Membership Fee
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                Complete your payment of ₹500 to activate your profile and join the platform.
-                            </p>
-                            <button
-                                onClick={handleMakePayment}
-                                className="w-full bg-black dark:bg-indigo-600 hover:bg-gray-800 dark:hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors disabled:opacity-50"
-                                disabled={!profile}
-                            >
-                                Pay ₹500
-                            </button>
-                            {!profile && (
-                                <p className="text-xs text-center text-gray-500 dark:text-gray-500 mt-2">Submit bio-data to enable payment</p>
-                            )}
-                        </div>
+                        {profile?.membershipStatus?.name === 'ACTIVE' ? (
+                            <div className="mt-6 pt-6 border-t border-gray-100 dark:border-slate-800">
+                                <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 p-4 rounded-xl text-emerald-700 dark:text-emerald-400">
+                                    <h3 className="font-bold flex items-center gap-2 text-sm">
+                                        <CheckCircle className="w-5 h-5" />
+                                        Payment Completed
+                                    </h3>
+                                    <p className="text-sm mt-1 opacity-90">Your lifetime membership is fully paid and active.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mt-6 pt-6 border-t border-gray-100 dark:border-slate-800">
+                                <h3 className="font-semibold mb-2 flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                                    <CreditCard className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                    Choose a Membership
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                    View our monthly and yearly plans to activate your profile and join the platform.
+                                </p>
+                                {profile ? (
+                                    <Link
+                                        href="/dashboard/payment/memberships"
+                                        className="w-full bg-black dark:bg-indigo-600 hover:bg-gray-800 dark:hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors"
+                                    >
+                                        View Membership Plans
+                                    </Link>
+                                ) : (
+                                    <button
+                                        className="w-full bg-black dark:bg-indigo-600 hover:bg-gray-800 dark:hover:bg-indigo-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors opacity-50 cursor-not-allowed"
+                                        disabled
+                                    >
+                                        View Membership Plans
+                                    </button>
+                                )}
+                                {!profile && (
+                                    <p className="text-xs text-center text-gray-500 dark:text-gray-500 mt-2">Submit bio-data to enable payment</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

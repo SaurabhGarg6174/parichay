@@ -249,8 +249,8 @@ export default function AdminProfilesPage() {
                                         <td className="px-8 py-6"><div className="h-12 w-12 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td>
                                         <td className="px-8 py-6"><div className="h-4 w-48 bg-gray-200 dark:bg-slate-700 rounded"></div></td>
                                         <td className="px-8 py-6"><div className="h-6 w-20 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td>
-                                        <td className="px-8 py-6"><div className="h-6 w-20 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td> {/* Added for new column */}
-                                        <td className="px-8 py-6"><div className="h-6 w-20 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td> {/* Added for new column */}
+                                        <td className="px-8 py-6"><div className="h-6 w-20 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td>
+                                        <td className="px-8 py-6"><div className="h-6 w-20 bg-gray-200 dark:bg-slate-700 rounded-full"></div></td>
                                         <td className="px-8 py-6"><div className="h-8 w-24 bg-gray-200 dark:bg-slate-700 rounded ml-auto"></div></td>
                                     </tr>
                                 ))
