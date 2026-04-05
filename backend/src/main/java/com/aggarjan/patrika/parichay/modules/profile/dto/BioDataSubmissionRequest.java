@@ -23,7 +23,7 @@ public record BioDataSubmissionRequest(
                 String familyCountry,
                 String complexion,
                 String height,
-                String weight,
+                Integer weight, // in kg
                 Boolean wearsSpectacles,
                 @NotBlank(message = "Gotra is required")
                 @Size(min = 3, max = 50, message = "Gotra must be between 3 and 50 characters")

@@ -98,132 +98,146 @@ export default function MembershipsPage() {
     const isActive = profile?.membershipStatus?.name === 'ACTIVE';
 
     return (
-        <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-700">
-            <div className="text-center space-y-4 max-w-2xl mx-auto">
-                <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight">Simple, Transparent Pricing</h1>
-                <p className="text-lg text-gray-500 dark:text-gray-400">Unlock your journey to finding the perfect match with our flexible monthly or yearly membership.</p>
+        <div className="max-w-7xl mx-auto pb-32 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            {/* Strategy Header */}
+            <div className="text-center space-y-6 max-w-3xl mx-auto mb-20 relative">
+                <div className="absolute inset-0 bg-indigo-500/5 blur-[120px] rounded-full -z-10" />
+                <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.6em]">Premium Memberships</h4>
+                <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter leading-none mb-6">Choose Your Plan.</h1>
+                <p className="text-xl text-slate-500 font-medium leading-relaxed max-w-2xl mx-auto">Select the perfect membership plan to elevate your matchmaking experience.</p>
             </div>
 
+            {/* System Status Portal */}
             {isActive && (
-                <div className="max-w-5xl mx-auto px-4">
-                    <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-2xl p-5 flex items-center gap-4">
-                        <div className="shrink-0 w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center">
-                            <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <div className="max-w-5xl mx-auto px-4 mb-20">
+                    <div className="bg-slate-900 border border-emerald-500/20 rounded-[2.5rem] p-8 flex items-center gap-8 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="shrink-0 w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-[1.5rem] flex items-center justify-center relative z-10 transition-transform group-hover:scale-110">
+                            <Check className="w-8 h-8 text-emerald-400" />
                         </div>
-                        <div>
-                            <p className="font-bold text-emerald-800 dark:text-emerald-300">You have an active membership</p>
-                            <p className="text-sm text-emerald-700 dark:text-emerald-400 mt-0.5">Your profile is currently active. You can renew or upgrade your plan at any time.</p>
+                        <div className="relative z-10">
+                            <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-1">Premium Membership Active</p>
+                            <h3 className="text-2xl font-bold text-white tracking-tight">Account is upgraded</h3>
+                            <p className="text-slate-500 font-medium mt-1">You have full access to all premium features and contact details.</p>
+                        </div>
+                        <div className="ml-auto hidden md:block">
+                            <div className="px-6 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Active Member</div>
                         </div>
                     </div>
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto px-4">
+            {/* Tier Matrix */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-6xl mx-auto px-4 items-end">
                 
-                {/* Basic Plan */}
-                <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col justify-between opacity-75 grayscale-[50%] transition-all hover:grayscale-0 hover:opacity-100 hover:-translate-y-1 hover:shadow-lg">
+                {/* Recon Tier (Basic) */}
+                <div className="bg-slate-900 rounded-[3rem] p-12 border border-slate-800/60 flex flex-col justify-between h-[500px] opacity-60 grayscale-[80%] transition-all duration-700 hover:grayscale-0 hover:opacity-100 hover:border-slate-700 shadow-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-slate-800/10 rounded-bl-[100%] transition-all group-hover:bg-slate-800/20" />
                     <div>
-                        <div className="w-12 h-12 bg-gray-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6">
-                            <Shield className="w-6 h-6 text-gray-400" />
+                        <div className="w-14 h-14 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-center mb-8">
+                            <Shield className="w-7 h-7 text-slate-600" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Basic Access</h3>
-                        <div className="mt-4 flex items-baseline text-gray-900 dark:text-white">
-                            <span className="text-4xl font-black tracking-tight">Free</span>
+                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4">Basic Plan</h3>
+                        <div className="flex items-baseline text-white">
+                            <span className="text-5xl font-black tracking-tighter">Free</span>
                         </div>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">For browsing and setting up your bio-data footprint.</p>
-                        <ul className="mt-8 space-y-4 text-sm font-medium text-gray-600 dark:text-gray-300">
-                            {['Create Bio-Data Profile', 'View Match Outlines', 'Community Access'].map((feature, i) => (
-                                <li key={i} className="flex gap-3 items-center">
-                                    <Check className="w-5 h-5 text-gray-400 shrink-0" /> {feature}
+                        <ul className="mt-12 space-y-6">
+                            {['Create Profile', 'Search Matches', 'Basic Profile View'].map((feature, i) => (
+                                <li key={i} className="flex gap-4 items-center text-sm font-bold text-slate-500">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-700 shrink-0" /> {feature}
                                 </li>
                             ))}
                         </ul>
                     </div>
                 </div>
 
-                {/* Monthly Plan */}
-                <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-lg">
+                {/* Tactical Tier (Monthly) */}
+                <div className="bg-white rounded-[3rem] p-12 border border-slate-100 flex flex-col justify-between h-[600px] transition-all duration-700 hover:-translate-y-2 hover:shadow-[0_40px_80px_rgba(0,0,0,0.1)] relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-bl-[100%] transition-all group-hover:bg-indigo-500/10" />
                     <div>
-                        <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center mb-6">
-                            <Star className="w-6 h-6" />
+                        <div className="w-14 h-14 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-8">
+                            <Star className="w-7 h-7" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Monthly Flex</h3>
-                        <div className="mt-4 flex items-baseline text-gray-900 dark:text-white">
-                            <span className="text-4xl font-black tracking-tight">₹300</span>
-                            <span className="ml-2 text-gray-500 font-medium">/ month</span>
+                        <h3 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.4em] mb-4">Monthly Plan</h3>
+                        <div className="flex items-baseline text-slate-950">
+                            <span className="text-5xl font-black tracking-tighter">₹300</span>
+                            <span className="ml-3 text-slate-400 font-bold uppercase text-[10px] tracking-widest">/ Month</span>
                         </div>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Flexibility to find your matches month-by-month.</p>
-                        <ul className="mt-8 space-y-4 text-sm font-medium text-gray-600 dark:text-gray-300">
-                            {['Full Bio-Data Access', 'Direct messaging to Matches', 'Priority Admin Approvals', 'Verification Badge'].map((feature, i) => (
-                                <li key={i} className="flex gap-3 items-center">
+                        <ul className="mt-10 space-y-6">
+                            {['View Contact Details', 'Express Interest', 'Priority Support', 'Premium Badge'].map((feature, i) => (
+                                <li key={i} className="flex gap-4 items-center text-sm font-bold text-slate-600">
                                     <Check className="w-5 h-5 text-indigo-500 shrink-0" /> {feature}
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    <div className="mt-10">
+                    <div className="mt-12 pt-8 border-t border-slate-100">
                         <button 
                             onClick={() => handleMakePayment(300, 'Monthly Flex')}
                             disabled={processing || !profile || isActive}
-                            className="w-full bg-indigo-50 dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 active:scale-95 hover:bg-indigo-100 dark:hover:bg-slate-700 font-bold py-4 rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-5 bg-slate-950 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.3em] transition-all active:scale-95 disabled:opacity-30 hover:bg-indigo-600 shadow-2xl flex items-center justify-center gap-3"
                         >
                             {processing ? (
-                                <div className="w-5 h-5 border-2 border-indigo-700 dark:border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-                            ) : isActive ? 'Renew Monthly' : 'Start Monthly'}
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : isActive ? 'Renew Monthly' : 'Choose Monthly'}
                         </button>
-                        {!profile && <p className="text-center text-xs mt-3 text-gray-400">Please submit bio-data first.</p>}
                     </div>
                 </div>
 
-                {/* Yearly Plan (The active one) */}
-                <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 rounded-[2.5rem] p-8 shadow-2xl shadow-indigo-500/20 text-white flex flex-col justify-between transform md:-translate-y-4 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-                    <div className="absolute top-6 right-6 px-4 py-1.5 bg-amber-500/30 backdrop-blur-md rounded-full text-[10px] font-black text-amber-300 tracking-widest uppercase border border-amber-500/20">Best Value</div>
+                {/* Sovereign Tier (Yearly) */}
+                <div className="bg-slate-950 rounded-[3.5rem] p-12 lg:p-14 border border-indigo-500/30 flex flex-col justify-between h-[700px] transition-all duration-700 hover:-translate-y-4 hover:border-indigo-500/60 shadow-[0_40px_100px_rgba(79,70,229,0.3)] relative overflow-hidden group">
+                    {/* Visual Energy */}
+                    <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[80px] -mr-40 -mt-40 transition-all duration-1000 group-hover:scale-125" />
                     
                     <div className="relative z-10">
-                        <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 border border-white/10">
-                            <Gem className="w-7 h-7 text-amber-300" />
+                        <div className="flex justify-between items-start mb-8">
+                            <div className="w-16 h-16 bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center">
+                                <Gem className="w-8 h-8 text-amber-300" />
+                            </div>
+                            <div className="px-5 py-2 bg-amber-500 text-white rounded-full text-[10px] font-black tracking-[0.3em] uppercase shadow-lg shadow-amber-500/20">Best Value</div>
                         </div>
-                        <h3 className="text-2xl font-bold">Yearly Premium</h3>
-                        <div className="mt-4 flex items-baseline">
-                            <span className="text-5xl font-black tracking-tight">₹1200</span>
-                            <span className="ml-2 text-indigo-300 font-medium">/ year</span>
+                        
+                        <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] mb-4">Yearly Plan</h3>
+                        <div className="flex items-baseline text-white">
+                            <span className="text-7xl font-black tracking-tighter">₹1200</span>
+                            <span className="ml-4 text-indigo-300 font-bold uppercase text-xs tracking-widest">/ Year</span>
                         </div>
-                        <p className="mt-3 text-sm text-indigo-200 leading-relaxed">Save money and get a full year to connect with verified matches confidently.</p>
+                        <p className="mt-6 text-slate-400 font-medium leading-relaxed max-w-[240px]">Get the maximum value and uninterrupted premium access for an entire year.</p>
                         
-                        <div className="my-8 h-px bg-gradient-to-r from-white/0 via-white/20 to-white/0"></div>
-                        
-                        <ul className="space-y-4 text-sm font-medium text-indigo-50">
+                        <ul className="mt-12 space-y-6">
                             {[
-                                'Everything in Monthly', 
-                                'Saves ₹2400/year', 
-                                'Boosted profile visibility', 
-                                'Dedicated matchmaking support'
+                                'All Monthly Features', 
+                                'Save 66% Annually', 
+                                'Highlighted Profile', 
+                                'Dedicated Support'
                             ].map((feature, i) => (
-                                <li key={i} className="flex gap-3 items-center">
-                                    <div className="bg-amber-500/40 rounded-full p-1 shrink-0"><Check className="w-3 h-3 text-white" /></div> 
+                                <li key={i} className="flex gap-4 items-center text-sm font-black text-indigo-50 tracking-tight">
+                                    <div className="w-6 h-6 bg-indigo-500/20 border border-indigo-500/30 rounded-lg flex items-center justify-center shrink-0">
+                                        <Check className="w-3.5 h-3.5 text-indigo-400" />
+                                    </div>
                                     {feature}
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    <div className="relative z-10 mt-10">
+                    <div className="relative z-10 mt-12">
                         <button 
                             onClick={() => handleMakePayment(1200, 'Yearly Premium')}
                             disabled={processing || !profile || isActive}
-                            className="w-full bg-white text-indigo-900 active:scale-95 hover:bg-indigo-50 font-bold py-4 rounded-2xl transition-all shadow-lg shadow-white/10 disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="w-full py-6 bg-white text-slate-950 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.4em] transition-all hover:scale-[1.03] active:scale-100 disabled:opacity-30 shadow-2xl flex items-center justify-center gap-4"
                         >
                             {processing ? (
-                                <div className="w-5 h-5 border-2 border-indigo-900 border-t-transparent rounded-full animate-spin"></div>
-                            ) : isActive ? 'Renew Yearly' : 'Upgrade to Yearly'}
+                                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                            ) : isActive ? 'Renew Yearly' : 'Choose Yearly'}
                         </button>
-                        {!profile && <p className="text-center text-xs mt-3 text-indigo-200">Please submit bio-data first.</p>}
+                        {!profile && <p className="text-center text-[10px] mt-6 text-slate-500 font-black uppercase tracking-widest">Submit Bio-Data to Upgrade</p>}
                     </div>
                 </div>
 
             </div>
         </div>
     );
+
 }

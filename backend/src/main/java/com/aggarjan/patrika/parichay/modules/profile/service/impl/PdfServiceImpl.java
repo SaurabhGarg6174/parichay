@@ -49,7 +49,7 @@ public class PdfServiceImpl implements PdfService {
             addRows(personalTable, normalFont, "Full Name", bioData.getFullName(), "Gender", bioData.getGender());
             addRows(personalTable, normalFont, "Date of Birth", bioData.getDob() != null ? bioData.getDob().toString() : "", "Birth Time", bioData.getBirthTime());
             addRows(personalTable, normalFont, "Birth Place", bioData.getBirthPlace(), "Marital Status", bioData.getMaritalStatus());
-            addRows(personalTable, normalFont, "Height", bioData.getHeight(), "Weight", bioData.getWeight());
+            addRows(personalTable, normalFont, "Height", bioData.getHeight() != null ? bioData.getHeight() + " cm" : "-", "Weight", bioData.getWeight() != null ? bioData.getWeight() + " kg" : "-");
             addRows(personalTable, normalFont, "Complexion", bioData.getComplexion(), "Gotra", bioData.getGotra());
             addRows(personalTable, normalFont, "Manglik Status", bioData.getIsManglik(), "Spectacles", bioData.getWearsSpectacles() != null && bioData.getWearsSpectacles() ? "Yes" : "No");
             document.add(personalTable);

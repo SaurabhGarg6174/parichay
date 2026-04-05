@@ -234,7 +234,7 @@ public class ProfileServiceImpl implements ProfileService {
                                 .familyState(request.familyState())
                                 .familyCountry(request.familyCountry())
                                 .complexion(request.complexion())
-                                .height(request.height())
+                                .height(parseHeightToCm(request.height()))
                                 .weight(request.weight())
                                 .education(request.education())
                                 .occupation(request.occupation())
@@ -295,7 +295,8 @@ public class ProfileServiceImpl implements ProfileService {
                         }
                 }
 
-                if (isActiveMember) {
+                boolean isOwner = requesterEmail != null && requesterEmail.equals(bioData.getUser().getEmail());
+                if (isActiveMember || isOwner) {
                         return bioData;
                 }
 
@@ -336,6 +337,7 @@ public class ProfileServiceImpl implements ProfileService {
                                 .isPhotoHidden(bioData.isPhotoHidden())
                                 .sameGotra(bioData.isSameGotra())
                                 .isPhotoAccessible(bioData.isPhotoAccessible())
+                                .user(bioData.getUser())
                                 .build();
         }
 
@@ -358,7 +360,7 @@ public class ProfileServiceImpl implements ProfileService {
                 bioData.setFamilyState(request.familyState());
                 bioData.setFamilyCountry(request.familyCountry());
                 bioData.setComplexion(request.complexion());
-                bioData.setHeight(request.height());
+                bioData.setHeight(parseHeightToCm(request.height()));
                 bioData.setWeight(request.weight());
                 bioData.setEducation(request.education());
                 bioData.setOccupation(request.occupation());
@@ -376,4 +378,32 @@ public class ProfileServiceImpl implements ProfileService {
                 bioData.setSistersUnmarried(request.sistersUnmarried());
                 bioData.setPhotoHidden(request.isPhotoHidden() != null ? request.isPhotoHidden() : false);
         }
+
+    private Integer parseHeightToCm(String heightStr) {
+        if (heightStr == null || heightStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            String lower = heightStr.toLowerCase();
+            // Check for ft/in format (e.g., "5ft 10in")
+            if (lower.contains("ft")) {
+                var cleaned = lower.replace("ft", " ").replace("in", " ").trim();
+                var parts = cleaned.split("\\s+");
+                if (parts.length >= 2) {
+                    int ft = Integer.parseInt(parts[0]);
+                    int in = Integer.parseInt(parts[1]);
+                    return (int) Math.round((ft * 30.48) + (in * 2.54));
+                } else if (parts.length == 1) {
+                    int ft = Integer.parseInt(parts[0]);
+                    return (int) Math.round(ft * 30.48);
+                }
+            }
+            // Check for "cm" suffix or just plain number
+            var cmStr = lower.replace("cm", "").trim();
+            return (int) Math.round(Double.parseDouble(cmStr));
+        } catch (Exception e) {
+            log.warn("Failed to parse height: {}", heightStr);
+            return null;
+        }
+    }
 }
