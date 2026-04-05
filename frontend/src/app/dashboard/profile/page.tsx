@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { CreditCard, CheckCircle, Pencil, User as UserIcon, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { CreditCard, CheckCircle, Pencil, User as UserIcon, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, FileDown, Camera, Check, X as XIcon, Clock, Lock, Shield, Eye, EyeOff, QrCode, Share2 } from 'lucide-react';
+import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
+import Modal from '@/components/Modal';
 
 const FieldView = ({ label, value }: { label: string, value: any }) => (
     <div className="mb-4 bg-gray-50/50 dark:bg-slate-800/50 p-3 rounded-lg border border-gray-100/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
@@ -13,8 +15,9 @@ const FieldView = ({ label, value }: { label: string, value: any }) => (
     </div>
 );
 
-export default function Dashboard() {
+export default function ProfilePage() {
     const { user } = useAuth();
+    const { showToast } = useToast();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
@@ -51,8 +54,11 @@ export default function Dashboard() {
         brothersMarried: 0,
         brothersUnmarried: 0,
         sistersMarried: 0,
-        sistersUnmarried: 0
+        sistersUnmarried: 0,
+        isPhotoHidden: false
     });
+    const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
+    const [qrModal, setQrModal] = useState(false);
 
     // Modern Date Picker Logic
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -156,8 +162,15 @@ export default function Dashboard() {
                     brothersMarried: pd.brothersMarried || 0,
                     brothersUnmarried: pd.brothersUnmarried || 0,
                     sistersMarried: pd.sistersMarried || 0,
-                    sistersUnmarried: pd.sistersUnmarried || 0
+                    sistersUnmarried: pd.sistersUnmarried || 0,
+                    isPhotoHidden: pd.isPhotoHidden || false
                 });
+                
+                // Fetch photo requests
+                const reqRes = await api.get('/profiles/photo-requests');
+                if (reqRes.data?.data) {
+                    setIncomingRequests(reqRes.data.data);
+                }
             }
         } catch (e) {
             console.log('No profile exists yet');
@@ -201,6 +214,18 @@ export default function Dashboard() {
             const message = err.response?.data?.details || err.response?.data?.message || 'Failed to save profile';
             const errorMessage = typeof message === 'object' ? JSON.stringify(message) : message;
             setPopup({ show: true, message: errorMessage, type: 'error' });
+        }
+    };
+
+    const handleRespondToRequest = async (requestId: number, status: string) => {
+        try {
+            await api.put(`/profiles/photo-requests/${requestId}/respond/${status}`);
+            showToast(`Request ${status.toLowerCase()} successfully`, 'success');
+            // Refresh requests
+            const reqRes = await api.get('/profiles/photo-requests');
+            setIncomingRequests(reqRes.data.data || []);
+        } catch (e) {
+            showToast('Failed to respond to request', 'error');
         }
     };
 
@@ -315,9 +340,25 @@ export default function Dashboard() {
                     <div className="flex justify-between items-center mb-6 border-b dark:border-slate-800 pb-4">
                         <h2 className="text-xl font-semibold text-indigo-700 dark:text-indigo-400">{isEditing ? 'Bio-Data Form' : 'Profile Details'}</h2>
                         {!isEditing && (
-                            <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 px-3 py-1.5 rounded-lg">
-                                <Pencil className="w-4 h-4" /> Edit
-                            </button>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={async () => {
+                                        const res = await api.get(`/profiles/${profile.id}/download-pdf`, { responseType: 'blob' });
+                                        const url = window.URL.createObjectURL(new Blob([res.data]));
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.setAttribute('download', 'My_BioData.pdf');
+                                        document.body.appendChild(link);
+                                        link.click();
+                                    }}
+                                    className="flex items-center gap-2 text-sm font-medium text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 px-3 py-1.5 rounded-lg"
+                                >
+                                    <FileDown className="w-4 h-4" /> Download Bio-Data
+                                </button>
+                                <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 px-3 py-1.5 rounded-lg">
+                                    <Pencil className="w-4 h-4" /> Edit
+                                </button>
+                            </div>
                         )}
                         {isEditing && profile && (
                             <button type="button" onClick={() => setIsEditing(false)} className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
@@ -345,6 +386,19 @@ export default function Dashboard() {
                                             <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                                         </label>
                                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">JPG, PNG. Max size 10MB.</p>
+                                        <div className="mt-4 flex items-center gap-2">
+                                            <input 
+                                                type="checkbox" 
+                                                id="isPhotoHidden" 
+                                                name="isPhotoHidden" 
+                                                checked={formData.isPhotoHidden} 
+                                                onChange={handleChange}
+                                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                                            />
+                                            <label htmlFor="isPhotoHidden" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                                                Hide photo from public (Request access model)
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -757,6 +811,94 @@ export default function Dashboard() {
                         )}
                     </div>
                 </div>
+
+                {/* Photo Requests Section */}
+                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 p-6 md:p-10 mb-8">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="p-3 bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-2xl">
+                            <Camera className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Photo Requests</h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Manage who can see your private photos</p>
+                        </div>
+                    </div>
+
+                    {incomingRequests.length > 0 ? (
+                        <div className="space-y-4">
+                            {incomingRequests.map((req) => (
+                                <div key={req.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-800 transition-all hover:bg-gray-100 dark:hover:bg-slate-800 gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold">
+                                            {req.requesterEmail[0].toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{req.requesterEmail}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-0.5">
+                                                <Clock className="w-3 h-3" /> Requested on {new Date(req.createdAt).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                                        {req.status === 'PENDING' ? (
+                                            <>
+                                                <button 
+                                                    onClick={() => handleRespondToRequest(req.id, 'APPROVED')}
+                                                    className="flex-1 sm:flex-none px-4 py-2 bg-emerald-500 text-white rounded-xl text-xs font-bold hover:bg-emerald-600 transition-all flex items-center justify-center gap-1.5"
+                                                >
+                                                    <Check className="w-3.5 h-3.5" /> Approve
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleRespondToRequest(req.id, 'REJECTED')}
+                                                    className="flex-1 sm:flex-none px-4 py-2 bg-rose-500 text-white rounded-xl text-xs font-bold hover:bg-rose-600 transition-all flex items-center justify-center gap-1.5"
+                                                >
+                                                    <XIcon className="w-3.5 h-3.5" /> Deny
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <span className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest ${
+                                                req.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+                                            }`}>
+                                                {req.status}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-10 border-2 border-dashed border-gray-100 dark:border-slate-800 rounded-3xl">
+                            <Clock className="w-10 h-10 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No incoming requests yet</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* QR Code Modal */}
+                <Modal
+                    isOpen={qrModal}
+                    onClose={() => setQrModal(false)}
+                    title="Profile QR Code"
+                >
+                    <div className="flex flex-col items-center p-6 text-center">
+                        <div className="bg-white p-4 rounded-3xl shadow-xl border border-gray-100 mb-6">
+                            <img 
+                                src={`${api.defaults.baseURL}/profiles/${profile?.id}/qr-code`} 
+                                alt="Profile QR Code" 
+                                className="w-64 h-64"
+                            />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Scan to View Bio-Data</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Families can scan this code to directly open your professional profile on Parichay.</p>
+                        <button 
+                            onClick={() => window.print()}
+                            className="w-full py-3 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                        >
+                            <Share2 className="w-5 h-5" /> Save or Print
+                        </button>
+                    </div>
+                </Modal>
             </div>
         </div>
     );

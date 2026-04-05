@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, MapPin, Calendar, Lock, Phone, User as UserIcon, Building2, Book, Award, Briefcase, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Lock, Phone, User as UserIcon, Building2, Book, Award, Briefcase, ShieldCheck, AlertCircle, FileDown, Camera, Send } from 'lucide-react';
+import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 
 export default function MatchDetailPage() {
     const params = useParams();
     const router = useRouter();
+    const { showToast } = useToast();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -82,11 +84,40 @@ export default function MatchDetailPage() {
 
                 <div className="px-8 pb-8 flex flex-col sm:flex-row gap-6 items-start relative">
                     <div className="w-32 h-32 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border-4 border-white dark:border-slate-800 flex items-center justify-center -mt-16 flex-shrink-0 relative z-10 overflow-hidden">
-                        {profile.photoUrl ? (
-                            <img src={`${IMAGE_BASE_URL}${profile.photoUrl}`} alt={profile.fullName} className="w-full h-full object-cover" />
-                        ) : (
-                            <UserIcon className="w-16 h-16 text-gray-300 dark:text-gray-500" />
-                        )}
+                        <div className={`h-full w-full flex items-center justify-center relative ${!profile.isPhotoAccessible ? 'backdrop-blur-3xl' : ''}`}>
+                            {profile.photoUrl ? (
+                                <img 
+                                    src={`${IMAGE_BASE_URL}${profile.photoUrl}`} 
+                                    alt={profile.fullName} 
+                                    className={`w-full h-full object-cover transition-all duration-1000 ${!profile.isPhotoAccessible ? 'blur-[40px] opacity-40 scale-150' : ''}`} 
+                                />
+                            ) : (
+                                <UserIcon className="w-24 h-24 text-gray-200 dark:text-gray-700" />
+                            )}
+
+                            {!profile.isPhotoAccessible && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-500">
+                                    <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/30 shadow-xl">
+                                        <Camera className="w-8 h-8 text-white" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2 drop-shadow-md">Private Photo</h3>
+                                    <p className="text-indigo-50 text-sm mb-6 max-w-[200px] drop-shadow-sm font-medium">This profile has restricted photo access to verified family requests only.</p>
+                                    <button 
+                                        onClick={async () => {
+                                            try {
+                                                await api.post(`/profiles/${profile.id}/request-photo`);
+                                                showToast('Access request sent successfully!', 'success');
+                                            } catch (e) {
+                                                showToast('Failed to send request', 'error');
+                                            }
+                                        }}
+                                        className="px-6 py-2.5 bg-white text-indigo-600 rounded-xl text-sm font-bold shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+                                    >
+                                        <Send className="w-4 h-4" /> Request Access
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex-1 pt-2">
@@ -99,7 +130,24 @@ export default function MatchDetailPage() {
                                             <ShieldCheck className="w-6 h-6 text-emerald-500" />
                                         </div>
                                     )}
+                                    {profile.isCommunityVerified && (
+                                        <div title="Community Verified (Vikas Trust)" className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-xl border border-amber-200 dark:border-amber-700/30">
+                                            <Award className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                                            <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-tighter">Community Verified</span>
+                                        </div>
+                                    )}
                                 </div>
+                                {profile.sameGotra && (
+                                    <div className="mt-3 flex items-center gap-3 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl">
+                                        <div className="p-2 bg-rose-100 dark:bg-rose-500/20 rounded-full">
+                                            <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-rose-800 dark:text-rose-300">Same Gotra Warning ({profile.gotra})</p>
+                                            <p className="text-xs text-rose-600 dark:text-rose-400 leading-tight">Match found with your Gotra. Families following Sagal rules may consider this a sibling relation. Please consult your elders or the Trust for cultural guidance.</p>
+                                        </div>
+                                    </div>
+                                )}
                                 <p className="text-lg text-gray-600 dark:text-gray-400 flex items-center gap-2">
                                     {profile.height ? `${profile.height} • ` : ''}{profile.gender || 'Not specified'}
                                     <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
@@ -116,6 +164,21 @@ export default function MatchDetailPage() {
                                     <Phone className="w-4 h-4" /> {profile.contactNumber}
                                 </div>
                             )}
+
+                            <button 
+                                onClick={async () => {
+                                    const res = await api.get(`/profiles/${profile.id}/download-pdf`, { responseType: 'blob' });
+                                    const url = window.URL.createObjectURL(new Blob([res.data]));
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.setAttribute('download', `BioData_${profile.fullName.replace(/\s+/g, '_')}.pdf`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                }}
+                                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-amber-200 dark:shadow-none transition-all hover:scale-105"
+                            >
+                                <FileDown className="w-5 h-5" /> Download Bio-Data
+                            </button>
                         </div>
                     </div>
                 </div>

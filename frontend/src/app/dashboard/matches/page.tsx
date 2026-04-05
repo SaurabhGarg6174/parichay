@@ -5,11 +5,12 @@ import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import {
     Search, MapPin, User as UserIcon, Calendar, Lock, Briefcase, GraduationCap,
-    Filter, ChevronLeft, ChevronRight, X, SlidersHorizontal, Heart, ShieldCheck
+    Filter, ChevronLeft, ChevronRight, X, SlidersHorizontal, Heart, ShieldCheck, Award, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import Modal from '@/components/Modal';
 import { useToast } from '@/context/ToastContext';
+import SuccessStories from '@/components/SuccessStories';
 
 interface BioData {
     id: number;
@@ -31,6 +32,10 @@ interface BioData {
     gotra: string;
     isManglik: string;
     verified: boolean;
+    isCommunityVerified: boolean;
+    sameGotra: boolean;
+    isPhotoHidden: boolean;
+    isPhotoAccessible: boolean;
 }
 
 interface SearchFilters {
@@ -62,7 +67,10 @@ export default function MatchesPage() {
     const [totalElements, setTotalElements] = useState(0);
     const [availableActions, setAvailableActions] = useState<any[]>([]);
     const [lookups, setLookups] = useState<Record<string, any[]>>({});
-    const [shortlistModal, setShortlistModal] = useState<{isOpen: boolean, profileName: string}>({isOpen: false, profileName: ''});
+    const [shortlistModal, setShortlistModal] = useState<{ isOpen: boolean, profileName: string, ad?: any }>({
+        isOpen: false,
+        profileName: ''
+    });
 
     useEffect(() => {
         const fetchLookups = async () => {
@@ -116,7 +124,7 @@ export default function MatchesPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [showToast]);
 
     useEffect(() => {
         fetchMatches(appliedFilters, page);
@@ -162,6 +170,7 @@ export default function MatchesPage() {
 
     return (
         <div className="max-w-7xl mx-auto">
+            <SuccessStories />
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
@@ -381,11 +390,20 @@ export default function MatchesPage() {
                                 {/* Card Header */}
                                 <div className="h-24 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 relative">
                                     <div className="absolute -bottom-10 left-6">
-                                        <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-2xl shadow-sm flex items-center justify-center border-4 border-white dark:border-slate-800 transform rotate-3 transition-transform group-hover:rotate-0 overflow-hidden">
+                                        <div className={`w-24 h-24 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border-4 border-white dark:border-slate-800 flex items-center justify-center -mb-8 overflow-hidden relative ${!match.isPhotoAccessible ? 'backdrop-blur-xl' : ''}`}>
                                             {match.photoUrl ? (
-                                                <img src={`${IMAGE_BASE_URL}${match.photoUrl}`} alt={match.fullName} className="w-full h-full object-cover" />
+                                                <img 
+                                                    src={`${IMAGE_BASE_URL}${match.photoUrl}`} 
+                                                    alt={match.fullName} 
+                                                    className={`w-full h-full object-cover transition-all duration-700 ${!match.isPhotoAccessible ? 'blur-2xl opacity-50 scale-125' : 'group-hover:scale-110'}`} 
+                                                />
                                             ) : (
-                                                <UserIcon className="w-10 h-10 text-gray-300 dark:text-gray-500" />
+                                                <UserIcon className="w-12 h-12 text-gray-300 dark:text-gray-500" />
+                                            )}
+                                            {!match.isPhotoAccessible && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                                                    <Lock className="w-6 h-6 text-white drop-shadow-md" />
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -408,7 +426,19 @@ export default function MatchesPage() {
                                                 <ShieldCheck className="w-5 h-5 text-emerald-500 fill-emerald-50 dark:fill-emerald-500/10" />
                                             </div>
                                         )}
+                                        {match.isCommunityVerified && (
+                                            <div title="Community Verified (Vikas Trust)" className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-700/30">
+                                                <Award className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500" />
+                                                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-tighter">Verified</span>
+                                            </div>
+                                        )}
                                     </div>
+                                    {match.sameGotra && (
+                                        <div className="mb-2 flex items-center gap-1.5 p-2 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-lg">
+                                            <ShieldCheck className="w-3.5 h-3.5 text-rose-500" />
+                                            <p className="text-[10px] font-semibold text-rose-700 dark:text-rose-400 leading-tight">Same Gotra ({match.gotra}) - Please verify Sagal rules</p>
+                                        </div>
+                                    )}
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{match.height ? `${match.height} • ` : ''}{match.gender || 'Not specified'}</p>
 
                                     <div className="space-y-3 flex-1 border-t border-gray-50 dark:border-slate-800/50 pt-4">
@@ -438,9 +468,18 @@ export default function MatchesPage() {
                                         {availableActions.filter(a => a.code !== 'VIEW').map(action => (
                                             <button 
                                                 key={action.code}
-                                                onClick={() => {
+                                                onClick={async () => {
                                                     if (action.code === 'SHORTLIST') {
-                                                        setShortlistModal({ isOpen: true, profileName: match.fullName });
+                                                        try {
+                                                            const adRes = await api.get('/business-directory/random-ad');
+                                                            setShortlistModal({ 
+                                                                isOpen: true, 
+                                                                profileName: match.fullName,
+                                                                ad: adRes.data.data 
+                                                            });
+                                                        } catch (e) {
+                                                            setShortlistModal({ isOpen: true, profileName: match.fullName });
+                                                        }
                                                     }
                                                 }}
                                                 className={`p-2.5 rounded-lg border transition-all ${action.code === 'SHORTLIST' ? 'border-rose-100 bg-rose-50 text-rose-500 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10' : 'border-gray-100 bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
@@ -502,13 +541,45 @@ export default function MatchesPage() {
                     </button>
                 }
             >
-                <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300">
-                    <div className="p-3 bg-rose-100 text-rose-600 rounded-2xl">
-                        <Heart className="w-6 h-6 fill-current" />
+                <div className="flex flex-col gap-6 text-gray-600 dark:text-gray-300">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-rose-100 text-rose-600 rounded-2xl">
+                            <Heart className="w-8 h-8 fill-current" />
+                        </div>
+                        <p className="text-lg">
+                            <span className="font-bold text-gray-900 dark:text-gray-100">{shortlistModal.profileName}</span> is now in your shortlist.
+                        </p>
                     </div>
-                    <p>You have successfully shortlisted <strong>{shortlistModal.profileName}</strong>. You can view all your shortlisted profiles in the dashboard.</p>
+
+                    {shortlistModal.ad && (
+                        <div className="mt-4 border-t border-gray-100 dark:border-slate-800 pt-6">
+                            <p className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 mb-2 tracking-widest pl-1">Community Business Partner</p>
+                            <div className="group relative overflow-hidden rounded-2xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-900/10 p-4 transition-all hover:bg-amber-50 dark:hover:bg-amber-900/20">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1">
+                                        <h4 className="text-base font-bold text-amber-900 dark:text-amber-400 leading-tight mb-1">{shortlistModal.ad.name}</h4>
+                                        <p className="text-xs font-semibold text-amber-700/70 dark:text-amber-500 uppercase tracking-tighter mb-2">{shortlistModal.ad.category}</p>
+                                        <div className="flex items-center gap-2 text-xs text-amber-800/60 dark:text-amber-400/60">
+                                            <MapPin className="w-3 h-3" />
+                                            <span>{shortlistModal.ad.city}</span>
+                                        </div>
+                                    </div>
+                                    {shortlistModal.ad.bannerUrl && (
+                                        <div className="w-20 h-20 rounded-xl overflow-hidden shadow-sm border border-amber-200/20 group-hover:scale-105 transition-transform">
+                                            <img src={`${IMAGE_BASE_URL}${shortlistModal.ad.bannerUrl}`} alt={shortlistModal.ad.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-4 flex items-center justify-between border-t border-amber-200/20 pt-3">
+                                    <span className="text-xs font-bold text-amber-600 dark:text-amber-500">📞 {shortlistModal.ad.contactNumber}</span>
+                                    <span className="text-[10px] font-medium text-amber-400 dark:text-amber-600 italic">Mention "Parichay" for disc.</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </Modal>
         </div>
     );
 }
+

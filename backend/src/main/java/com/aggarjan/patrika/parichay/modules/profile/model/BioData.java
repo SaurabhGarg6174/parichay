@@ -60,7 +60,22 @@ public class BioData extends BaseEntity {
     private MembershipStatus membershipStatus;
 
     @Builder.Default
+    @Column(name = "is_verified", nullable = false)
     private boolean isVerified = false;
+
+    @Builder.Default
+    @Column(name = "is_community_verified", nullable = false)
+    private boolean isCommunityVerified = false;
+
+    @Builder.Default
+    @Column(name = "is_photo_hidden", nullable = false)
+    private boolean isPhotoHidden = false;
+
+    @Transient
+    private boolean sameGotra = false;
+
+    @Transient
+    private boolean isPhotoAccessible = true;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

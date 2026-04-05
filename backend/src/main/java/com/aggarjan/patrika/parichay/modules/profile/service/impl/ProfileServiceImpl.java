@@ -4,9 +4,13 @@ import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSearchRequest;
 import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSubmissionRequest;
 import com.aggarjan.patrika.parichay.modules.profile.model.BioData;
 import com.aggarjan.patrika.parichay.modules.profile.model.MembershipStatus;
-import com.aggarjan.patrika.parichay.modules.profile.repo.BioDataRepo;
-import com.aggarjan.patrika.parichay.modules.profile.repo.BioDataSpecification;
-import com.aggarjan.patrika.parichay.modules.profile.repo.MembershipStatusRepo;
+import com.aggarjan.patrika.parichay.modules.profile.model.PhotoRequest;
+import com.aggarjan.patrika.parichay.modules.profile.model.SuccessStory;
+import com.aggarjan.patrika.parichay.modules.profile.repository.BioDataRepo;
+import com.aggarjan.patrika.parichay.modules.profile.repository.BioDataSpecification;
+import com.aggarjan.patrika.parichay.modules.profile.repository.MembershipStatusRepo;
+import com.aggarjan.patrika.parichay.modules.profile.repository.PhotoRequestRepo;
+import com.aggarjan.patrika.parichay.modules.profile.repository.SuccessStoryRepo;
 import com.aggarjan.patrika.parichay.modules.profile.service.ProfileService;
 import com.aggarjan.patrika.parichay.core.exception.BadRequestException;
 import com.aggarjan.patrika.parichay.core.exception.ResourceNotFoundException;
@@ -17,6 +21,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -25,6 +32,8 @@ public class ProfileServiceImpl implements ProfileService {
         private final com.aggarjan.patrika.parichay.modules.auth.repo.UserRepository userRepository;
         private final MembershipStatusRepo membershipStatusRepo;
         private final BioDataRepo bioDataRepo;
+        private final PhotoRequestRepo photoRequestRepo;
+        private final SuccessStoryRepo successStoryRepo;
 
         @Override
         @Transactional
@@ -166,6 +175,47 @@ public class ProfileServiceImpl implements ProfileService {
                 return bioDataRepo.save(bioData);
         }
 
+        @Override
+        @Transactional
+        public BioData updateCommunityVerificationStatus(Long bioDataId, boolean verified) {
+                BioData bioData = bioDataRepo.findById(bioDataId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "BioData not found with id: " + bioDataId));
+                bioData.setCommunityVerified(verified);
+                return bioDataRepo.save(bioData);
+        }
+
+        @Override
+        @Transactional
+        public PhotoRequest requestPhotoAccess(Long profileId, String requesterEmail) {
+                var existing = photoRequestRepo.findByRequesterEmailAndTargetBioDataId(requesterEmail, profileId);
+                if (existing.isPresent()) {
+                        return existing.get();
+                }
+                PhotoRequest request = PhotoRequest.builder()
+                                .requesterEmail(requesterEmail)
+                                .targetBioDataId(profileId)
+                                .status(PhotoRequest.RequestStatus.PENDING)
+                                .build();
+                return photoRequestRepo.save(request);
+        }
+
+        @Override
+        @Transactional
+        public PhotoRequest respondToPhotoRequest(Long requestId, String status) {
+                PhotoRequest request = photoRequestRepo.findById(requestId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Photo request not found"));
+                request.setStatus(PhotoRequest.RequestStatus.valueOf(status.toUpperCase()));
+                return photoRequestRepo.save(request);
+        }
+
+        @Override
+        public List<PhotoRequest> getIncomingPhotoRequests(String ownerEmail) {
+                var bioDataOpt = bioDataRepo.findByUser_Email(ownerEmail);
+                if (bioDataOpt.isEmpty()) return Collections.emptyList();
+                return photoRequestRepo.findAllByTargetBioDataIdOrderByCreatedAtDesc(bioDataOpt.get().getId());
+        }
+
 
         private BioData mapToBioData(BioDataSubmissionRequest request,
                         com.aggarjan.patrika.parichay.modules.auth.model.User user, MembershipStatus status) {
@@ -201,16 +251,47 @@ public class ProfileServiceImpl implements ProfileService {
                                 .sistersMarried(request.sistersMarried())
                                 .sistersUnmarried(request.sistersUnmarried())
                                 .membershipStatus(status)
+                                .isPhotoHidden(request.isPhotoHidden() != null ? request.isPhotoHidden() : false)
                                 .build();
         }
 
         private BioData maskBioDataIfNotActive(BioData bioData, String requesterEmail) {
                 boolean isActiveMember = false;
+                String requesterGotra = null;
                 if (requesterEmail != null) {
                         var requesterBioDataOpt = bioDataRepo.findByUser_Email(requesterEmail);
-                        if (requesterBioDataOpt.isPresent()
-                                        && "ACTIVE".equals(requesterBioDataOpt.get().getMembershipStatus().getName())) {
-                                isActiveMember = true;
+                        if (requesterBioDataOpt.isPresent()) {
+                                BioData requesterBioData = requesterBioDataOpt.get();
+                                if ("ACTIVE".equals(requesterBioData.getMembershipStatus().getName())) {
+                                        isActiveMember = true;
+                                }
+                                requesterGotra = requesterBioData.getGotra();
+                        }
+                }
+
+                // Set sameGotra flag
+                if (requesterGotra != null && bioData.getGotra() != null
+                                && requesterGotra.equalsIgnoreCase(bioData.getGotra())) {
+                        bioData.setSameGotra(true);
+                }
+
+                // Photo masking logic
+                if (bioData.isPhotoHidden()) {
+                        boolean hasApprovedRequest = false;
+                        if (requesterEmail != null) {
+                                // Check if requester is the owner
+                                if (requesterEmail.equals(bioData.getUser().getEmail())) {
+                                        hasApprovedRequest = true;
+                                } else {
+                                        var request = photoRequestRepo.findByRequesterEmailAndTargetBioDataId(requesterEmail,
+                                                        bioData.getId());
+                                        if (request.isPresent() && request.get().getStatus() == PhotoRequest.RequestStatus.APPROVED) {
+                                                hasApprovedRequest = true;
+                                        }
+                                }
+                        }
+                        if (!hasApprovedRequest) {
+                                bioData.setPhotoAccessible(false);
                         }
                 }
 
@@ -250,7 +331,17 @@ public class ProfileServiceImpl implements ProfileService {
                                 .sistersMarried(bioData.getSistersMarried())
                                 .sistersUnmarried(bioData.getSistersUnmarried())
                                 .membershipStatus(bioData.getMembershipStatus())
+                                .isVerified(bioData.isVerified())
+                                .isCommunityVerified(bioData.isCommunityVerified())
+                                .isPhotoHidden(bioData.isPhotoHidden())
+                                .sameGotra(bioData.isSameGotra())
+                                .isPhotoAccessible(bioData.isPhotoAccessible())
                                 .build();
+        }
+
+        @Override
+        public List<SuccessStory> getAllSuccessStories() {
+                return successStoryRepo.findAll();
         }
 
         private void updateBioDataFields(BioData bioData, BioDataSubmissionRequest request) {
@@ -283,5 +374,6 @@ public class ProfileServiceImpl implements ProfileService {
                 bioData.setBrothersUnmarried(request.brothersUnmarried());
                 bioData.setSistersMarried(request.sistersMarried());
                 bioData.setSistersUnmarried(request.sistersUnmarried());
+                bioData.setPhotoHidden(request.isPhotoHidden() != null ? request.isPhotoHidden() : false);
         }
 }

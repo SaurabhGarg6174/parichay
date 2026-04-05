@@ -5,9 +5,12 @@ import org.springframework.data.domain.Pageable;
 import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSearchRequest;
 import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSubmissionRequest;
 import com.aggarjan.patrika.parichay.modules.profile.model.BioData;
+import com.aggarjan.patrika.parichay.modules.profile.model.PhotoRequest;
+import com.aggarjan.patrika.parichay.modules.profile.model.SuccessStory;
 import jakarta.validation.Valid;
 
 import java.util.Map;
+import java.util.List;
 
 public interface ProfileService {
     BioData submitBioData(@Valid BioDataSubmissionRequest request, String userEmail);
@@ -32,4 +35,11 @@ public interface ProfileService {
 
     Map<String, Long> getProfileStats();
     BioData updateVerificationStatus(Long bioDataId, boolean verified);
+    BioData updateCommunityVerificationStatus(Long bioDataId, boolean verified);
+
+    PhotoRequest requestPhotoAccess(Long profileId, String requesterEmail);
+    PhotoRequest respondToPhotoRequest(Long requestId, String status);
+    List<PhotoRequest> getIncomingPhotoRequests(String ownerEmail);
+
+    List<SuccessStory> getAllSuccessStories();
 }

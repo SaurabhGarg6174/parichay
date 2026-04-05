@@ -39,5 +39,6 @@ public record BioDataSubmissionRequest(
                 Integer brothersMarried,
                 Integer brothersUnmarried,
                 Integer sistersMarried,
-                Integer sistersUnmarried) {
+                Integer sistersUnmarried,
+                Boolean isPhotoHidden) {
 }
