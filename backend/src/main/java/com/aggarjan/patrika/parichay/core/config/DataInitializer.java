@@ -7,7 +7,7 @@ import com.aggarjan.patrika.parichay.modules.metadata.model.Lookup;
 import com.aggarjan.patrika.parichay.modules.metadata.repo.ActionRepo;
 import com.aggarjan.patrika.parichay.modules.metadata.repo.LookupRepo;
 import com.aggarjan.patrika.parichay.modules.profile.model.MembershipStatus;
-import com.aggarjan.patrika.parichay.modules.profile.repo.MembershipStatusRepo;
+import com.aggarjan.patrika.parichay.modules.profile.repository.MembershipStatusRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 import java.util.Map;
 
-// @Configuration
+@Configuration
 @RequiredArgsConstructor
 public class DataInitializer {
 

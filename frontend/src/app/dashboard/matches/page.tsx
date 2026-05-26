@@ -5,11 +5,12 @@ import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import {
     Search, MapPin, User as UserIcon, Calendar, Lock, Briefcase, GraduationCap,
-    Filter, ChevronLeft, ChevronRight, X, SlidersHorizontal, Heart, ShieldCheck
+    Filter, ChevronLeft, ChevronRight, X, SlidersHorizontal, Heart, ShieldCheck, Award, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import Modal from '@/components/Modal';
 import { useToast } from '@/context/ToastContext';
+import SuccessStories from '@/components/SuccessStories';
 
 interface BioData {
     id: number;
@@ -31,6 +32,12 @@ interface BioData {
     gotra: string;
     isManglik: string;
     verified: boolean;
+    isCommunityVerified: boolean;
+    sameGotra: boolean;
+    isPhotoHidden: boolean;
+    isPhotoAccessible: boolean;
+    formattedHeight: string;
+    formattedWeight: string;
 }
 
 interface SearchFilters {
@@ -62,7 +69,10 @@ export default function MatchesPage() {
     const [totalElements, setTotalElements] = useState(0);
     const [availableActions, setAvailableActions] = useState<any[]>([]);
     const [lookups, setLookups] = useState<Record<string, any[]>>({});
-    const [shortlistModal, setShortlistModal] = useState<{isOpen: boolean, profileName: string}>({isOpen: false, profileName: ''});
+    const [shortlistModal, setShortlistModal] = useState<{ isOpen: boolean, profileName: string, ad?: any }>({
+        isOpen: false,
+        profileName: ''
+    });
 
     useEffect(() => {
         const fetchLookups = async () => {
@@ -116,7 +126,7 @@ export default function MatchesPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [showToast]);
 
     useEffect(() => {
         fetchMatches(appliedFilters, page);
@@ -135,6 +145,13 @@ export default function MatchesPage() {
     };
 
     const activeFilterCount = Object.values(appliedFilters).filter(v => v !== '').length;
+
+    const formatShortName = (name: string) => {
+        if (!name) return "";
+        const parts = name.trim().split(/\s+/);
+        if (parts.length <= 2) return name;
+        return `${parts[0]} ${parts[parts.length - 1]}`;
+    };
 
     const isLocked = (val: string | undefined | null) => val === "Unlock to view";
 
@@ -161,159 +178,129 @@ export default function MatchesPage() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Discover Matches</h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">
-                        {loading ? 'Searching...' : `Found ${totalElements} active profiles`}
+        <div className="space-y-12 animate-in fade-in duration-1000">
+            <SuccessStories />
+            
+            {/* Header / Search Portal */}
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-8 pb-8 border-b border-slate-200 dark:border-slate-800/60">
+                <div className="space-y-2">
+                    <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em]">Find Your Partner</p>
+                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">Discover Matches</h1>
+                    <p className="text-slate-500 dark:text-slate-400 font-bold transition-all">
+                        {loading ? 'Loading profiles...' : `${totalElements} matches found`}
                     </p>
                 </div>
 
-                <div className="flex gap-3 w-full md:w-auto">
-                    <div className="relative flex-1 md:w-72">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
+                    <div className="relative flex-1 sm:w-80 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input
                             type="text"
                             placeholder="Search by name..."
                             value={filters.name}
                             onChange={e => setFilters(prev => ({ ...prev, name: e.target.value }))}
                             onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+                            className="w-full pl-12 pr-6 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm group-hover:shadow-md transition-all"
                         />
                     </div>
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border font-medium text-sm transition-all shadow-sm ${showFilters || activeFilterCount > 0
-                            ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400'
-                            : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                        className={`flex items-center justify-center gap-3 px-8 py-4 rounded-2xl border font-black text-xs uppercase tracking-widest transition-all ${showFilters || activeFilterCount > 0
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-[0_8px_20px_rgba(79,70,229,0.3)]'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm'
                             }`}
                     >
                         <SlidersHorizontal className="w-4 h-4" />
                         Filters
                         {activeFilterCount > 0 && (
-                            <span className="bg-indigo-600 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{activeFilterCount}</span>
+                            <span className="bg-white text-indigo-600 text-[10px] px-2 py-0.5 rounded-full font-black ml-1">{activeFilterCount}</span>
                         )}
                     </button>
                 </div>
             </div>
 
-            {/* Filter Panel */}
+            {/* Filter Hub */}
             {showFilters && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 p-6 mb-6 animate-in slide-in-from-top-2">
-                    <div className="flex justify-between items-center mb-5">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                            <Filter className="w-5 h-5 text-indigo-500" /> Search Filters
+                <div className="glass-dark rounded-[2.5rem] p-10 mb-12 animate-in slide-in-from-top-4 duration-500 border border-slate-800/40">
+                    <div className="flex justify-between items-center mb-10">
+                        <h3 className="text-xs font-black text-white uppercase tracking-[0.4em] flex items-center gap-3">
+                            <div className="w-8 h-8 bg-indigo-500/20 rounded-xl flex items-center justify-center">
+                                <Filter className="w-4 h-4 text-indigo-400" />
+                            </div>
+                            Filter Matches
                         </h3>
-                        <button onClick={() => setShowFilters(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
-                            <X className="w-5 h-5" />
+                        <button onClick={() => setShowFilters(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-all">
+                            <X className="w-6 h-6" />
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Gotra</label>
-                            <select
-                                name="gotra"
-                                value={filters.gotra}
-                                onChange={handleChange}
-                                className="w-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="">All Gotras</option>
-                                {(lookups['GOTRA'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
-                            </select>
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {[
+                            { label: 'Gotra', name: 'gotra', options: lookups['GOTRA'] },
+                            { label: 'Gender', name: 'gender', options: lookups['GENDER'] },
+                            { label: 'Education', name: 'education', options: lookups['EDUCATION'] },
+                            { label: 'Manglik', name: 'isManglik', options: lookups['MANGLIK_STATUS'] }
+                        ].map((field) => (
+                            <div key={field.name} className="space-y-4">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{field.label}</label>
+                                <select
+                                    name={field.name}
+                                    value={filters[field.name as keyof SearchFilters]}
+                                    onChange={handleChange}
+                                    className="w-full bg-slate-800/50 border border-slate-700/50 text-white px-4 py-3.5 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all appearance-none"
+                                >
+                                    <option value="">Any</option>
+                                    {(field.options || []).map(l => <option key={l.id} value={l.label} className="bg-slate-900">{l.label}</option>)}
+                                </select>
+                            </div>
+                        ))}
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Gender</label>
-                            <select
-                                name="gender"
-                                value={filters.gender}
-                                onChange={handleChange}
-                                className="w-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="">All Genders</option>
-                                {(lookups['GENDER'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
-                            </select>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Education</label>
-                            <select
-                                name="education"
-                                value={filters.education}
-                                onChange={handleChange}
-                                className="w-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="">All Education</option>
-                                {(lookups['EDUCATION'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
-                            </select>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Manglik Status</label>
-                            <select
-                                name="isManglik"
-                                value={filters.isManglik}
-                                onChange={handleChange}
-                                className="w-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                <option value="">Any Status</option>
-                                {(lookups['MANGLIK_STATUS'] || []).map(l => <option key={l.id} value={l.label}>{l.label}</option>)}
-                            </select>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">City</label>
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Location / City</label>
                             <input
                                 name="city"
                                 value={filters.city}
                                 onChange={handleChange}
-                                placeholder="Search city..."
-                                className="w-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Any Region"
+                                className="w-full bg-slate-800/50 border border-slate-700/50 text-white px-4 py-3.5 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                             />
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Min Age</label>
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Age Span (Min)</label>
                             <input
                                 type="number"
                                 name="minAge"
-                                min="18"
-                                max="70"
-                                placeholder="18"
                                 value={filters.minAge}
                                 onChange={handleChange}
-                                className="w-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="18"
+                                className="w-full bg-slate-800/50 border border-slate-700/50 text-white px-4 py-3.5 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                             />
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Max Age</label>
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Age Span (Max)</label>
                             <input
                                 type="number"
                                 name="maxAge"
-                                min="18"
-                                max="70"
-                                placeholder="40"
                                 value={filters.maxAge}
                                 onChange={handleChange}
-                                className="w-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 px-3 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="70"
+                                className="w-full bg-slate-800/50 border border-slate-700/50 text-white px-4 py-3.5 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
                             />
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-100 dark:border-slate-800">
+                    <div className="flex justify-end gap-4 mt-12 pt-8 border-t border-slate-800/40">
                         <button
                             onClick={handleClearFilters}
-                            className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                            className="px-6 py-3.5 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-white transition-colors"
                         >
-                            Clear All
+                            Clear Filters
                         </button>
                         <button
                             onClick={handleApplyFilters}
-                            className="px-6 py-2.5 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+                            className="px-10 py-3.5 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20"
                         >
                             Apply Filters
                         </button>
@@ -321,139 +308,137 @@ export default function MatchesPage() {
                 </div>
             )}
 
-            {/* Active Filters Tags */}
-            {activeFilterCount > 0 && !showFilters && (
-                <div className="flex flex-wrap gap-2 mb-6">
-                    {Object.entries(appliedFilters)
-                        .filter(([, v]) => v !== '')
-                        .map(([key, value]) => (
-                            <span key={key} className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 px-3 py-1.5 rounded-lg text-sm font-medium border border-indigo-100 dark:border-indigo-500/20">
-                                <span className="text-indigo-400 dark:text-indigo-500 capitalize">{key === 'isManglik' ? 'Manglik' : key === 'minAge' ? 'Min Age' : key === 'maxAge' ? 'Max Age' : key}:</span>
-                                {value}
-                                <button onClick={() => {
-                                    const updated = { ...appliedFilters, [key]: '' };
-                                    setAppliedFilters(updated);
-                                    setFilters(updated);
-                                    setPage(0);
-                                }}>
-                                    <X className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300" />
-                                </button>
-                            </span>
-                        ))}
-                    <button onClick={handleClearFilters} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline">
-                        Clear all
-                    </button>
+            {/* Loading / Results Context */}
+            {loading ? (
+                <div className="p-20 flex flex-col justify-center items-center gap-6">
+                    <div className="w-16 h-16 border-4 border-indigo-500/10 border-t-indigo-500 rounded-full animate-spin"></div>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Loading profiles...</p>
                 </div>
-            )}
-
-            {/* Loading */}
-            {loading && (
-                <div className="p-8 flex justify-center items-center h-[50vh]">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                </div>
-            )}
-
-            {/* Results */}
-            {!loading && matches.length === 0 && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 p-12 text-center">
-                    <div className="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <UserIcon className="w-10 h-10 text-gray-400 dark:text-gray-500" />
-                    </div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Matches Found</h2>
-                    <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                        {activeFilterCount > 0
-                            ? 'Try adjusting your filters to see more results.'
-                            : "We couldn't find any active profiles at the moment. Please check back later."}
-                    </p>
-                    {activeFilterCount > 0 && (
-                        <button onClick={handleClearFilters} className="px-6 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors">
-                            Clear Filters
+            ) : matches.length === 0 ? (
+                <div className="bg-white dark:bg-slate-900 rounded-[3rem] p-24 text-center border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-500/5 rounded-full blur-[80px]" />
+                    <div className="relative z-10 max-w-md mx-auto">
+                        <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
+                            <UserIcon className="w-10 h-10 text-slate-300 dark:text-slate-500" />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-4 uppercase">No Matches Found</h2>
+                        <p className="text-slate-500 dark:text-slate-400 font-bold mb-10 leading-relaxed">
+                            Adjust your filters to discover more matching profiles.
+                        </p>
+                        <button onClick={handleClearFilters} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">
+                            Clear All Filters
                         </button>
-                    )}
+                    </div>
                 </div>
-            )}
-
-            {!loading && matches.length > 0 && (
+            ) : (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
                         {matches.map((match) => (
-                            <div key={match.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden hover:shadow-md transition-shadow group flex flex-col">
-                                {/* Card Header */}
-                                <div className="h-24 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 relative">
-                                    <div className="absolute -bottom-10 left-6">
-                                        <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-2xl shadow-sm flex items-center justify-center border-4 border-white dark:border-slate-800 transform rotate-3 transition-transform group-hover:rotate-0 overflow-hidden">
+                            <div key={match.id} className="group bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/60 overflow-hidden hover:shadow-2xl hover:-translate-y-3 transition-all duration-700 flex flex-col relative">
+                                {/* Card Header / Visual ID */}
+                                <div className="h-32 bg-slate-900 relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 via-transparent to-transparent opacity-60" />
+                                    <div className="absolute -bottom-12 left-10">
+                                        <div className={`w-28 h-28 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-4 border-white dark:border-slate-900 flex items-center justify-center overflow-hidden relative`}>
                                             {match.photoUrl ? (
-                                                <img src={`${IMAGE_BASE_URL}${match.photoUrl}`} alt={match.fullName} className="w-full h-full object-cover" />
+                                                <img 
+                                                    src={`${IMAGE_BASE_URL}${match.photoUrl}`} 
+                                                    alt={match.fullName} 
+                                                    className={`w-full h-full object-cover transition-all duration-1000 ${!match.isPhotoAccessible ? 'blur-3xl opacity-30 scale-150' : 'group-hover:scale-110'}`} 
+                                                />
                                             ) : (
-                                                <UserIcon className="w-10 h-10 text-gray-300 dark:text-gray-500" />
+                                                <UserIcon className="w-12 h-12 text-slate-200 dark:text-slate-700" />
+                                            )}
+                                            {!match.isPhotoAccessible && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-md">
+                                                    <Lock className="w-8 h-8 text-white/50" />
+                                                </div>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-md uppercase tracking-wider">
-                                        {match.maritalStatus || 'Single'}
-                                    </div>
-                                    {match.gotra && (
-                                        <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-md">
-                                            {match.gotra}
+                                    <div className="absolute top-6 right-6 flex items-center gap-2">
+                                        <div className="bg-indigo-500 text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-[0.2em] shadow-lg">
+                                            {match.maritalStatus}
                                         </div>
-                                    )}
+                                        {match.verified && (
+                                            <div className="bg-emerald-500 p-1.5 rounded-lg shadow-lg">
+                                                <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Card Body */}
-                                <div className="pt-12 pb-6 px-6 flex-1 flex flex-col">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{match.fullName}</h3>
-                                        {match.verified && (
-                                            <div title="Verified Profile">
-                                                <ShieldCheck className="w-5 h-5 text-emerald-500 fill-emerald-50 dark:fill-emerald-500/10" />
-                                            </div>
-                                        )}
+                                {/* Card Body / Identity Fragments */}
+                                <div className="pt-20 pb-10 px-10 flex-1 flex flex-col">
+                                    <div className="mb-6">
+                                        <div className="flex items-center justify-between mb-2 gap-2">
+                                            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter truncate flex-1 min-w-0">{formatShortName(match.fullName)}</h3>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest shrink-0 max-w-[40%] truncate">{match.gotra}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            {match.isCommunityVerified && (
+                                                <div className="flex items-center gap-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-500 px-2 py-0.5 rounded-md border border-amber-500/20">
+                                                    <Award className="w-3 h-3" />
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">Trust Certified</span>
+                                                </div>
+                                            )}
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">
+                                                {match.formattedHeight || `${match.height} cm`} • {match.gender}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{match.height ? `${match.height} • ` : ''}{match.gender || 'Not specified'}</p>
 
-                                    <div className="space-y-3 flex-1 border-t border-gray-50 dark:border-slate-800/50 pt-4">
-                                        {renderField(match.dob, <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />)}
-                                        {renderField(
-                                            [match.familyCity, match.familyState].filter(Boolean).join(', '),
-                                            <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500" />,
-                                            "Location not specified"
-                                        )}
-                                        {renderField(match.education, <GraduationCap className="w-4 h-4 text-gray-400 dark:text-gray-500" />, "Education unseen")}
-                                        {renderField(match.occupation, <Briefcase className="w-4 h-4 text-gray-400 dark:text-gray-500" />, "Occupation unseen")}
-
-                                        <div className="mt-2 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg">
-                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Premium Info</p>
-                                            <div className="space-y-2">
-                                                {renderField(match.contactNumber, <span className="text-gray-400 dark:text-gray-500 w-4 h-4 flex items-center justify-center text-xs">📞</span>)}
-                                                {renderField(match.fatherName ? `Father: ${match.fatherName}` : null, <span className="text-gray-400 dark:text-gray-500 w-4 h-4 flex items-center justify-center text-xs">👨</span>)}
+                                    <div className="space-y-4 mb-8 pt-8 border-t border-slate-50 dark:border-slate-800/40">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Date of Birth</p>
+                                                {renderField(match.dob, <Calendar className="w-3.5 h-3.5 text-slate-300" />)}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Location</p>
+                                                {renderField(match.familyCity, <MapPin className="w-3.5 h-3.5 text-slate-300" />)}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Education</p>
+                                                {renderField(match.education, <GraduationCap className="w-3.5 h-3.5 text-slate-300" />, "Hidden")}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Occupation</p>
+                                                {renderField(match.occupation, <Briefcase className="w-3.5 h-3.5 text-slate-300" />, "Hidden")}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-800 flex gap-3">
-                                        <Link href={`/dashboard/matches/${match.id}`} className="flex-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-center py-2.5 rounded-lg font-medium text-sm hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors">
-                                            View Full Profile
+                                    {/* Action Hub */}
+                                    <div className="mt-auto flex items-center gap-4 pt-6 border-t border-slate-50 dark:border-slate-800/40">
+                                        <Link href={`/dashboard/matches/${match.id}`} className="flex-1 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 p-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] text-center hover:scale-[1.02] active:scale-100 transition-all shadow-xl dark:shadow-none">
+                                            View Complete Profile
                                         </Link>
                                         
-                                        {availableActions.filter(a => a.code !== 'VIEW').map(action => (
+                                        {availableActions.filter(a => a.code === 'SHORTLIST').map(action => (
                                             <button 
                                                 key={action.code}
-                                                onClick={() => {
-                                                    if (action.code === 'SHORTLIST') {
+                                                onClick={async () => {
+                                                    try {
+                                                        const adRes = await api.get('/business-directory/random-ad');
+                                                        setShortlistModal({ isOpen: true, profileName: match.fullName, ad: adRes.data.data });
+                                                    } catch (e) {
                                                         setShortlistModal({ isOpen: true, profileName: match.fullName });
                                                     }
                                                 }}
-                                                className={`p-2.5 rounded-lg border transition-all ${action.code === 'SHORTLIST' ? 'border-rose-100 bg-rose-50 text-rose-500 hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/10' : 'border-gray-100 bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
-                                                title={action.label}
+                                                className="p-3.5 bg-rose-500/10 text-rose-500 rounded-2xl hover:bg-rose-500/20 transition-all"
+                                                title="Shortlist Identification"
                                             >
-                                                {action.code === 'SHORTLIST' && <Heart className="w-5 h-5" />}
-                                                {action.code !== 'SHORTLIST' && <span>{action.label}</span>}
+                                                <Heart className="w-4 h-4 fill-current transition-transform group-hover:scale-125" />
                                             </button>
                                         ))}
 
                                         {isLocked(match.contactNumber) && (
-                                            <Link href="/dashboard/profile" className="flex-1 bg-gray-900 dark:bg-slate-700 text-white text-center py-2.5 rounded-lg font-medium text-sm hover:bg-black dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2">
-                                                <Lock className="w-4 h-4" /> Unlock
+                                            <Link href="/dashboard/profile" title="Unlock Details" className="p-3.5 bg-amber-500/10 text-amber-600 rounded-2xl hover:bg-amber-500/20 transition-all">
+                                                <Lock className="w-4 h-4" />
                                             </Link>
                                         )}
                                     </div>
@@ -462,26 +447,26 @@ export default function MatchesPage() {
                         ))}
                     </div>
 
-                    {/* Pagination */}
+                    {/* Pagination Matrix */}
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-between mt-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 p-4">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Page {page + 1} of {totalPages} ({totalElements} profiles)
-                            </p>
-                            <div className="flex gap-2">
+                        <div className="flex items-center justify-between mt-16 p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/60 shadow-xl">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">
+                                Page {page + 1} of {totalPages}
+                            </span>
+                            <div className="flex gap-4">
                                 <button
-                                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                                    onClick={() => { setPage(p => Math.max(0, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                     disabled={page === 0}
-                                    className="flex items-center gap-1 px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                    className="px-8 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 transition-all"
                                 >
-                                    <ChevronLeft className="w-4 h-4" /> Previous
+                                    Previous
                                 </button>
                                 <button
-                                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                                    onClick={() => { setPage(p => Math.min(totalPages - 1, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                     disabled={page >= totalPages - 1}
-                                    className="flex items-center gap-1 px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                    className="px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl border border-slate-900 dark:border-white text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
                                 >
-                                    Next <ChevronRight className="w-4 h-4" />
+                                    Next Page
                                 </button>
                             </div>
                         </div>
@@ -496,19 +481,56 @@ export default function MatchesPage() {
                 footer={
                     <button 
                         onClick={() => setShortlistModal({ isOpen: false, profileName: '' })}
-                        className="px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 transition-all hover:scale-105"
+                        className="px-8 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
                     >
-                        Great!
+                        Close
                     </button>
                 }
             >
-                <div className="flex items-center gap-4 text-gray-600 dark:text-gray-300">
-                    <div className="p-3 bg-rose-100 text-rose-600 rounded-2xl">
-                        <Heart className="w-6 h-6 fill-current" />
+                <div className="space-y-10 py-4">
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center animate-pulse">
+                            <Heart className="w-8 h-8 fill-current" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mb-1">Shortlisted Successfully</p>
+                            <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+                                <span className="text-indigo-600">{shortlistModal.profileName}</span> has been saved to your shortlisted profiles.
+                            </p>
+                        </div>
                     </div>
-                    <p>You have successfully shortlisted <strong>{shortlistModal.profileName}</strong>. You can view all your shortlisted profiles in the dashboard.</p>
+
+                    {shortlistModal.ad && (
+                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800/60">
+                            <p className="text-[10px] uppercase font-black text-slate-400 dark:text-slate-500 mb-6 tracking-[0.3em] pl-1">Sponsored Advertisement</p>
+                            <div className="group bg-slate-50 dark:bg-slate-800/20 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800/60 hover:bg-white dark:hover:bg-slate-800/40 transition-all duration-500 flex flex-col gap-6 shadow-inner">
+                                <div className="flex items-start justify-between gap-6">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-[8px] font-black text-amber-600 uppercase tracking-[0.2em] mb-1">Sponsor</p>
+                                            <h4 className="text-xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:text-amber-500 transition-colors">{shortlistModal.ad.name}</h4>
+                                        </div>
+                                        <div className="flex flex-wrap gap-4">
+                                            <span className="text-[9px] font-black bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800 uppercase tracking-widest text-slate-500">{shortlistModal.ad.category}</span>
+                                            <span className="text-[9px] font-black bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800 uppercase tracking-widest text-slate-500">{shortlistModal.ad.city}</span>
+                                        </div>
+                                    </div>
+                                    {shortlistModal.ad.bannerUrl && (
+                                        <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl border border-white dark:border-slate-800 rotate-3 group-hover:rotate-0 transition-all duration-500">
+                                            <img src={`${IMAGE_BASE_URL}${shortlistModal.ad.bannerUrl}`} alt={shortlistModal.ad.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="pt-6 border-t border-slate-200/40 flex items-center justify-between">
+                                    <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">📞 {shortlistModal.ad.contactNumber}</span>
+                                    <span className="text-[8px] font-bold text-slate-400 italic">Mention "Parichay" for Elite Access</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </Modal>
         </div>
     );
 }
+

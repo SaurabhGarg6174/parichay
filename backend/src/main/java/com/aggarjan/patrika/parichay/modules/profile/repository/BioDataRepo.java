@@ -1,4 +1,4 @@
-package com.aggarjan.patrika.parichay.modules.profile.repo;
+package com.aggarjan.patrika.parichay.modules.profile.repository;
 
 import com.aggarjan.patrika.parichay.modules.profile.model.BioData;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { 
@@ -47,7 +47,7 @@ interface ProfileStats {
     ACTIVE: number;
 }
 
-export default function AdminProfilesPage() {
+function AdminProfilesContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { showToast } = useToast();
@@ -433,5 +433,17 @@ export default function AdminProfilesPage() {
                 </div>
             </Modal>
         </div>
+    );
+}
+
+export default function AdminProfilesPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+        }>
+            <AdminProfilesContent />
+        </Suspense>
     );
 }

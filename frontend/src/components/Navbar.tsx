@@ -39,68 +39,74 @@ export default function Navbar() {
     );
 
     const AuthLinks = () => (
-        <>
+        <div className="flex items-center gap-1.5 overflow-hidden">
             {user ? (
                 <>
-                    <div className="hidden md:block border-l h-6 border-gray-300 dark:border-gray-700 mx-2" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2 px-3 py-2">
-                        <UserIcon className="w-4 h-4" /> <span className="max-w-[150px] truncate">{user.email}</span>
-                    </span>
+                    <div className="hidden md:block w-px h-4 bg-slate-200 dark:bg-slate-800 mx-2" />
+                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm">
+                        <div className="p-1.5 bg-indigo-500/10 rounded-lg">
+                            <UserIcon className="w-3.5 h-3.5 text-indigo-500" />
+                        </div>
+                        <span className="text-xs font-black text-slate-700 dark:text-slate-300 max-w-[120px] truncate uppercase tracking-wider">
+                            {user.email.split('@')[0]}
+                        </span>
+                    </div>
                     <button
                         onClick={() => { logout(); setIsMenuOpen(false); }}
-                        className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 px-3 py-2 rounded-md text-sm font-medium flex gap-2 items-center transition-colors w-full md:w-auto"
+                        className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all duration-300"
+                        title="Logout"
                     >
-                        <LogOut className="w-4 h-4" />
-                        Logout
+                        <LogOut className="w-4.5 h-4.5" />
                     </button>
                 </>
             ) : (
-                <div className="flex flex-col md:flex-row gap-2 md:items-center">
+                <div className="flex items-center gap-2">
                     <Link
                         href="/login"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-800 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                        className="text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 dark:hover:text-white px-4 py-2 transition-colors"
                     >
                         Login
                     </Link>
                     <Link
                         href="/register"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors text-center"
+                        className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg"
                     >
-                        Register
+                        Join Now
                     </Link>
                 </div>
             )}
-        </>
+        </div>
     );
 
     return (
-        <nav className="bg-white dark:bg-slate-900 shadow-sm border-b border-gray-100 dark:border-slate-800 transition-colors duration-300 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
+        <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800/60 sticky top-0 z-[100] transition-all duration-500">
+            <div className="max-w-7xl mx-auto px-6">
+                <div className="flex justify-between h-20">
                     <div className="flex items-center">
-                        <Link href="/" className="flex-shrink-0 flex items-center">
-                            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                                Parichay
+                        <Link href="/" className="group flex items-center gap-3">
+                            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:rotate-6 transition-transform duration-500">
+                                <span className="text-white font-black text-xl">P</span>
+                            </div>
+                            <span className="text-xl font-black text-slate-900 dark:text-white tracking-tighter group-hover:tracking-normal transition-all duration-500">
+                                Parichay<span className="text-indigo-600">.</span>
                             </span>
                         </Link>
                     </div>
 
                     {/* Desktop Menu */}
-                    <div className="hidden md:flex items-center gap-2">
+                    <div className="hidden md:flex items-center gap-4">
                         {user && <NavLinks />}
                         <AuthLinks />
-                        <div className="border-l h-6 border-gray-300 dark:border-gray-700 mx-1" />
+                        <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-2" />
                         <ThemeToggle />
                     </div>
 
                     {/* Mobile Menu Button */}
-                    <div className="flex items-center md:hidden gap-2">
+                    <div className="flex items-center md:hidden gap-3">
                         <ThemeToggle />
                         <button
                             onClick={toggleMenu}
-                            className="p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 focus:outline-none transition-colors"
+                            className="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                         >
                             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
@@ -110,19 +116,18 @@ export default function Navbar() {
 
             {/* Mobile Menu Overlay */}
             {isMenuOpen && (
-                <div className="md:hidden border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 animate-in slide-in-from-top duration-200">
-                    <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                        {user && (
-                            <div className="mb-2">
-                                <NavLinks />
-                            </div>
-                        )}
-                        <div className="pt-2 border-t border-gray-100 dark:border-slate-800">
-                            <AuthLinks />
+                <div className="md:hidden border-t border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl animate-in slide-in-from-top duration-500 p-6 space-y-6">
+                    {user && (
+                        <div className="grid gap-2">
+                            <NavLinks />
                         </div>
+                    )}
+                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                        <AuthLinks />
                     </div>
                 </div>
             )}
         </nav>
     );
+
 }

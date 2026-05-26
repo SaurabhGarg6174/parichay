@@ -71,6 +71,15 @@ public class AdminController {
                 "Profile verification status updated successfully"));
     }
 
+    @PutMapping("/profiles/{profileId}/verify-community/{verified}")
+    public ResponseEntity<ApiResponse<BioData>> updateCommunityVerification(
+            @PathVariable Long profileId,
+            @PathVariable boolean verified) {
+        return ResponseEntity.ok(ApiResponse.success(
+                profileService.updateCommunityVerificationStatus(profileId, verified),
+                "Profile community verification status updated successfully"));
+    }
+
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<PagedResponse<UserDto>>> getAllUsers(
             @RequestParam(defaultValue = "true") boolean enabled,

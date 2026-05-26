@@ -2,7 +2,7 @@ package com.aggarjan.patrika.parichay.modules.profile.controller;
 
 import com.aggarjan.patrika.parichay.core.payload.ApiResponse;
 import com.aggarjan.patrika.parichay.modules.profile.model.MembershipStatus;
-import com.aggarjan.patrika.parichay.modules.profile.repo.MembershipStatusRepo;
+import com.aggarjan.patrika.parichay.modules.profile.repository.MembershipStatusRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

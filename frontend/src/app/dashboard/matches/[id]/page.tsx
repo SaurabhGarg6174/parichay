@@ -3,12 +3,16 @@
 import { useEffect, useState } from 'react';
 import api, { IMAGE_BASE_URL } from '@/lib/api';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, MapPin, Calendar, Lock, Phone, User as UserIcon, Building2, Book, Award, Briefcase, ShieldCheck } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { ArrowLeft, MapPin, Calendar, Lock, Phone, User as UserIcon, Building2, Book, Award, Briefcase, ShieldCheck, AlertCircle, FileDown, Camera, Send } from 'lucide-react';
+import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 
 export default function MatchDetailPage() {
     const params = useParams();
     const router = useRouter();
+    const { user } = useAuth();
+    const { showToast } = useToast();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -48,22 +52,35 @@ export default function MatchDetailPage() {
 
     const isLocked = (val: string | undefined | null) => val === "Unlock to view";
 
-    const FieldView = ({ label, value, icon, premium = false }: { label: string, value: any, icon?: React.ReactNode, premium?: boolean }) => {
+    const FieldView = ({ label, value, icon, premium = false, className = "" }: { label: string, value: any, icon?: React.ReactNode, premium?: boolean, className?: string }) => {
         const locked = isLocked(value);
 
         return (
-            <div className={`p-4 rounded-xl border ${premium ? 'bg-indigo-50/50 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20' : 'bg-gray-50/50 dark:bg-slate-800/50 border-gray-100/50 dark:border-slate-700/50'} flex gap-3`}>
-                {icon && <div className={`mt-1 ${premium ? 'text-indigo-400 dark:text-indigo-300' : 'text-gray-400 dark:text-gray-500'}`}>{icon}</div>}
-                <div className="flex-1">
-                    <p className={`text-sm font-medium ${premium ? 'text-indigo-600/70 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'} mb-1`}>{label}</p>
+            <div className={`group p-4 rounded-2xl border transition-all duration-500 ${
+                premium 
+                    ? 'bg-gradient-to-br from-[hsl(230,25%,12%)] to-[hsl(230,25%,8%)] border-indigo-500/20 hover:border-indigo-500/40 shadow-[0_8px_32px_rgba(0,0,0,0.24)]' 
+                    : 'bg-gradient-to-br from-[hsl(222,25%,10%)] to-[hsl(222,25%,7%)] border-slate-800/60 hover:border-slate-700 shadow-lg'
+            } flex gap-4 items-start ${className}`}>
+                {icon && (
+                    <div className={`mt-0.5 p-2 rounded-xl ${
+                        premium ? 'bg-indigo-500/10 text-indigo-400' : 'bg-slate-800 text-slate-400'
+                    } group-hover:scale-110 transition-transform duration-500`}>
+                        {icon}
+                    </div>
+                )}
+                <div className="flex-1 min-w-0">
+                    <p className={`text-[10px] uppercase tracking-[0.15em] font-black ${
+                        premium ? 'text-indigo-400/80' : 'text-slate-500'
+                    } mb-1.5`}>{label}</p>
                     {locked ? (
-                        <div className="flex items-center text-rose-500 font-medium text-sm bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-md w-fit">
-                            <Lock className="w-3 h-3 mr-1" />
-                            <span className="blur-[2px] opacity-70 select-none mr-2">Locked Data</span>
-                            <span className="text-xs font-semibold uppercase tracking-wider">Unlock</span>
+                        <div className="flex items-center text-rose-400 font-bold text-[11px] bg-rose-500/10 px-2.5 py-1 rounded-lg w-fit border border-rose-500/20 backdrop-blur-sm">
+                            <Lock className="w-3 h-3 mr-1.5" />
+                            <span>Unlock to View</span>
                         </div>
                     ) : (
-                        <p className="text-base text-gray-900 dark:text-gray-100 font-semibold">{value || <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>}</p>
+                        <p className="text-base text-slate-100 font-semibold truncate leading-tight tracking-tight">
+                            {value || <span className="text-slate-600 font-normal italic">Not specified</span>}
+                        </p>
                     )}
                 </div>
             </div>
@@ -71,133 +88,221 @@ export default function MatchDetailPage() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto pb-12">
-            <button onClick={() => router.back()} className="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-6 transition-colors">
-                <ArrowLeft className="w-4 h-4 mr-1" /> Back to matches
-            </button>
-
-            {/* Header Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden mb-6 relative">
-                <div className="h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600"></div>
-
-                <div className="px-8 pb-8 flex flex-col sm:flex-row gap-6 items-start relative">
-                    <div className="w-32 h-32 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border-4 border-white dark:border-slate-800 flex items-center justify-center -mt-16 flex-shrink-0 relative z-10 overflow-hidden">
-                        {profile.photoUrl ? (
-                            <img src={`${IMAGE_BASE_URL}${profile.photoUrl}`} alt={profile.fullName} className="w-full h-full object-cover" />
-                        ) : (
-                            <UserIcon className="w-16 h-16 text-gray-300 dark:text-gray-500" />
-                        )}
+        <div className="max-w-6xl mx-auto pb-32 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            {/* Navigation Portal */}
+            <div className="flex items-center justify-between mb-12">
+                <button 
+                    onClick={() => router.back()} 
+                    className="group flex items-center gap-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] hover:text-indigo-400 transition-all duration-500"
+                >
+                    <div className="w-10 h-10 border border-slate-800 rounded-2xl flex items-center justify-center group-hover:border-indigo-500/40 group-hover:bg-indigo-500/5 transition-all">
+                        <ArrowLeft className="w-4 h-4" />
                     </div>
+                    Back to Matches
+                </button>
+            </div>
 
-                    <div className="flex-1 pt-2">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{profile.fullName}</h1>
-                                    {profile.verified && (
-                                        <div title="Verified Profile">
-                                            <ShieldCheck className="w-6 h-6 text-emerald-500" />
-                                        </div>
-                                    )}
-                                </div>
-                                <p className="text-lg text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                                    {profile.height ? `${profile.height} • ` : ''}{profile.gender || 'Not specified'}
-                                    <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-                                    <span className="text-indigo-600 dark:text-indigo-400 font-medium">{profile.maritalStatus || 'Single'}</span>
-                                </p>
-                            </div>
-
-                            {isLocked(profile.contactNumber) ? (
-                                <Link href="/dashboard/profile" className="px-6 py-2.5 bg-gray-900 dark:bg-slate-700 text-white text-center rounded-xl font-medium hover:bg-black dark:hover:bg-slate-600 transition-colors flex items-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none">
-                                    <Lock className="w-4 h-4" /> Unlock Premium Info
-                                </Link>
+            {/* Core Identity Dossier (Hero) */}
+            <div className="relative mb-16 rounded-[3.5rem] bg-slate-900 border border-slate-800/60 overflow-hidden shadow-2xl">
+                {/* Architectural Mesh Gradient */}
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px] -mr-40 -mt-40" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/5 rounded-full blur-[100px] -ml-20 -mb-20" />
+                
+                <div className="relative z-10 px-10 md:px-16 pt-16 pb-12 flex flex-col lg:flex-row gap-12 lg:items-end">
+                    {/* Visual ID Fragment */}
+                    <div className="relative group shrink-0">
+                        <div className="w-56 h-56 bg-slate-950 rounded-[3rem] border-4 border-slate-900 shadow-2xl flex items-center justify-center overflow-hidden relative ring-1 ring-slate-800">
+                            {profile.photoUrl ? (
+                                <img 
+                                    src={`${IMAGE_BASE_URL}${profile.photoUrl}`} 
+                                    alt={profile.fullName} 
+                                    className={`w-full h-full object-cover transition-all duration-1000 ${!profile.isPhotoAccessible ? 'blur-3xl opacity-20 scale-150' : 'group-hover:scale-105'}`} 
+                                />
                             ) : (
-                                <div className="px-6 py-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/30 text-green-700 dark:text-green-400 rounded-xl font-medium flex items-center gap-2">
-                                    <Phone className="w-4 h-4" /> {profile.contactNumber}
+                                <UserIcon className="w-20 h-20 text-slate-800" />
+                            )}
+                            {!profile.isPhotoAccessible && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-black/60 backdrop-blur-xl">
+                                    <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-4 transition-all group-hover:scale-110">
+                                        <Camera className="w-6 h-6 text-indigo-400" />
+                                    </div>
+                                    <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-4">Private Photo</p>
+                                    <button 
+                                        onClick={async (e) => {
+                                            e.stopPropagation();
+                                            try {
+                                                await api.post(`/profiles/${profile.id}/request-photo`);
+                                                showToast('Photo access requested!', 'success');
+                                            } catch (e) {
+                                                showToast('Failed to request access', 'error');
+                                            }
+                                        }}
+                                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-xl shadow-indigo-600/20"
+                                    >
+                                        Request Access
+                                    </button>
                                 </div>
                             )}
                         </div>
                     </div>
+
+                    {/* Meta Data Fragments */}
+                    <div className="flex-1 space-y-8">
+                        <div>
+                            <div className="flex flex-wrap items-center gap-4 mb-4">
+                                <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none">{profile.fullName}</h1>
+                                {profile.verified && (
+                                    <div className="px-4 py-1.5 bg-emerald-500 text-white rounded-full flex items-center gap-2 shadow-lg" title="Identity Verified">
+                                        <ShieldCheck className="w-3.5 h-3.5" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Verified Profile</span>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-slate-400">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                                    <span className="text-lg font-black text-white tracking-tight">{profile.formattedHeight || `${profile.height} cm`}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    <span className="text-lg font-black text-slate-300 tracking-tight">{profile.maritalStatus || 'Unmarried'}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-slate-700" />
+                                    <span className="text-lg font-bold text-slate-500 tracking-tight capitalize">{profile.isManglik === 'YES' ? 'Kuja Dosha' : 'Non-Manglik'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Quick Intel Bar */}
+                        <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-800/60">
+                            {isLocked(profile.contactNumber) ? (
+                                <Link href="/dashboard/profile" className="px-10 py-4.5 bg-white text-slate-900 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] hover:scale-105 active:scale-100 transition-all shadow-2xl flex items-center gap-3">
+                                    <Lock className="w-4 h-4" /> Unlock Details
+                                </Link>
+                            ) : (
+                                <div className="px-10 py-4.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-[1.5rem] font-black text-xl flex items-center gap-4 shadow-inner">
+                                    <Phone className="w-6 h-6" /> {profile.contactNumber}
+                                </div>
+                            )}
+
+                            {user?.id === profile?.user?.id && (
+                                <button 
+                                    onClick={async () => {
+                                        try {
+                                            const res = await api.get(`/profiles/${profile.id}/download-pdf`, { responseType: 'blob' });
+                                            const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+                                            const link = document.createElement('a'); link.href = url;
+                                            link.setAttribute('download', `Dossier_${profile.fullName.replace(/\s+/g, '_')}.pdf`);
+                                            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                                            window.URL.revokeObjectURL(url);
+                                        } catch (e) {
+                                            showToast('Download failed', 'error');
+                                        }
+                                    }}
+                                    className="px-10 py-4.5 bg-slate-800 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-700 transition-all flex items-center gap-4 shadow-xl"
+                                >
+                                    <FileDown className="w-5 h-5 text-indigo-400" /> Download PDF
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
+
+                {/* Cultural Boundary Alert */}
+                {profile.sameGotra && (
+                    <div className="m-6 mt-0 p-8 bg-rose-500/5 border border-rose-500/20 rounded-[2rem] flex flex-col md:flex-row items-center gap-8 animate-pulse text-center md:text-left">
+                        <div className="p-4 bg-rose-500/10 rounded-2xl">
+                            <AlertCircle className="w-8 h-8 text-rose-500" />
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-[0.4em]">Important Notice: Same Gotra</h4>
+                            <p className="text-xl font-bold text-slate-100 tracking-tight">Same Gotra Detected: <span className="text-rose-500">{profile.gotra}</span></p>
+                            <p className="text-sm text-slate-500 font-medium max-w-2xl">Lineage overlap identified. Cultural standards recommend external verification before engagement protocol.</p>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* Details Grid */}
-            <div className="grid md:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="space-y-6">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 p-8">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
-                            <UserIcon className="w-5 h-5 text-indigo-500" /> Personal Details
+            {/* Strategic Details Matrix */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Logical Core (Identity) */}
+                <div className="space-y-12">
+                    <section className="bg-white dark:bg-slate-900 rounded-[3rem] p-12 border border-slate-100 dark:border-slate-800 shadow-xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-bl-[100%] transition-all duration-500 group-hover:bg-indigo-500/10" />
+                        <h2 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.5em] mb-12 flex items-center gap-4">
+                            <UserIcon className="w-4 h-4" /> Personal Details
                         </h2>
-                        <div className="space-y-4">
-                            <FieldView label="Date of Birth" value={profile.dob} icon={<Calendar className="w-5 h-5" />} />
-                            <FieldView label="Birth Time" value={profile.birthTime} />
-                            <FieldView label="Birth Place" value={profile.birthPlace} />
-                            <FieldView label="Gotra" value={profile.gotra} />
-                            <FieldView
-                                label="Manglik Status"
-                                value={<span className="capitalize">{profile.isManglik || 'No'}</span>}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 p-8">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
-                            <Award className="w-5 h-5 text-purple-500" /> Physical Attributes
-                        </h2>
-                        <div className="space-y-4">
+                        <div className="grid gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FieldView label="Date of Birth" value={profile.dob} icon={<Calendar className="w-4.5 h-4.5" />} />
+                                <FieldView label="Gotra" value={profile.gotra} icon={<div className="w-1.5 h-1.5 rounded-full bg-slate-400" />} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <FieldView label="Birth Place" value={profile.birthPlace} />
+                                <FieldView label="Birth Time" value={profile.birthTime} />
+                            </div>
                             <FieldView label="Complexion" value={profile.complexion} />
-                            <FieldView label="Wears Spectacles" value={profile.wearsSpectacles ? 'Yes' : 'No'} />
                         </div>
-                    </div>
+                    </section>
+
+                    <section className="bg-white dark:bg-slate-900 rounded-[3rem] p-12 border border-slate-100 dark:border-slate-800 shadow-xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-bl-[100%] transition-all duration-500 group-hover:bg-purple-500/10" />
+                        <h2 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.5em] mb-12 flex items-center gap-4">
+                            <Award className="w-4 h-4" /> Physical Attributes
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FieldView label="Wears Spectacles" value={profile.wearsSpectacles ? 'Yes' : 'No'} />
+                            <FieldView label="Manglik Status" value={profile.isManglik} />
+                        </div>
+                    </section>
                 </div>
 
-                {/* Right Column */}
-                <div className="space-y-6">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 p-8">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
-                            <Briefcase className="w-5 h-5 text-blue-500" /> Professional Details
+                {/* Operations & Origin (Professional / Family) */}
+                <div className="space-y-12">
+                    <section className="bg-white dark:bg-slate-900 rounded-[3rem] p-12 border border-slate-100 dark:border-slate-800 shadow-xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-bl-[100%] transition-all duration-500 group-hover:bg-emerald-500/10" />
+                        <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.5em] mb-12 flex items-center gap-4">
+                            <Briefcase className="w-4 h-4" /> Education & Career
                         </h2>
-                        <div className="space-y-4">
-                            <FieldView label="Education" value={profile.education} icon={<Book className="w-5 h-5" />} />
-                            <FieldView label="Occupation" value={profile.occupation} icon={<Building2 className="w-5 h-5" />} />
-                            <FieldView label="Monthly Income" value={profile.monthlyIncome ? `₹${profile.monthlyIncome}` : ''} />
+                        <div className="grid gap-6">
+                            <FieldView label="Education" value={profile.education} icon={<Book className="w-4.5 h-4.5" />} />
+                            <FieldView label="Occupation" value={profile.occupation} icon={<Building2 className="w-4.5 h-4.5" />} />
+                            <FieldView premium label="Monthly Income" value={profile.monthlyIncome ? `₹${profile.monthlyIncome.toLocaleString()}` : null} />
                         </div>
-                    </div>
+                    </section>
 
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 p-8 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-500/10 rounded-bl-full -z-0 opacity-50"></div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 relative z-10 flex items-center gap-2">
-                            <svg className="w-5 h-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            Family & Contact Context (Premium)
+                    <section className="bg-slate-900 rounded-[3rem] p-12 border border-slate-800/60 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-600/10 rounded-bl-[100%]" />
+                        <h2 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] mb-12 flex items-center gap-4 relative z-10">
+                            <Lock className="w-4 h-4 text-rose-500" /> Family Details
                         </h2>
-                        <div className="space-y-4 relative z-10">
-                            <FieldView premium label="Father's Name" value={profile.fatherName ? `Father: ${profile.fatherName}` : null} />
-                            <FieldView premium label="Father's Occupation" value={profile.fatherOccupation} />
-                            <FieldView premium label="Mother's Name" value={profile.motherName ? `Mother: ${profile.motherName}` : null} />
-                            <FieldView premium label="Mother's Occupation" value={profile.motherOccupation} />
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <FieldView premium label="Bros (M / U)" value={`${profile.brothersMarried || 0} / ${profile.brothersUnmarried || 0}`} />
-                                <FieldView premium label="Sis (M / U)" value={`${profile.sistersMarried || 0} / ${profile.sistersUnmarried || 0}`} />
+                        <div className="grid gap-6 relative z-10">
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <FieldView premium label="Father's Name" value={profile.fatherName} />
+                                <FieldView premium label="Father's Occupation" value={profile.fatherOccupation} />
                             </div>
-
-                            <FieldView
-                                premium
-                                label="Complete Family Address"
-                                value={
-                                    isLocked(profile.familyAddress)
-                                        ? profile.familyAddress // The string "Unlock to view"
-                                        : `${profile.familyAddress || ''}, ${profile.familyCity || ''}, ${profile.familyState || ''}, ${profile.familyCountry || ''}`.replace(/^[,\s]+|[,\s]+$/g, '').replace(/,\s*,/g, ',')
-                                }
-                                icon={<MapPin className="w-5 h-5" />}
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <FieldView premium label="Mother's Name" value={profile.motherName} />
+                                <FieldView premium label="Mother's Occupation" value={profile.motherOccupation} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <FieldView premium label="Brother Count (M/U)" value={`${profile.brothersMarried || 0}/${profile.brothersUnmarried || 0}`} />
+                                <FieldView premium label="Sister Count (M/U)" value={`${profile.sistersMarried || 0}/${profile.sistersUnmarried || 0}`} />
+                            </div>
+                            <FieldView 
+                                premium 
+                                label="Family Address" 
+                                icon={<MapPin className="w-4.5 h-4.5" />}
+                                value={isLocked(profile.familyAddress) ? profile.familyAddress : [profile.familyAddress, profile.familyCity, profile.familyState].filter(Boolean).join(', ')} 
                             />
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
         </div>
     );
+
+
 }

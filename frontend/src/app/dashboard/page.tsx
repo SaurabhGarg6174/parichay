@@ -3,12 +3,12 @@
 import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
-import { 
-    Users, 
-    CheckCircle, 
-    Clock, 
-    XCircle, 
-    FileText, 
+import {
+    Users,
+    CheckCircle,
+    Clock,
+    XCircle,
+    FileText,
     ArrowRight,
     UserCircle,
     Heart,
@@ -56,7 +56,6 @@ export default function Dashboard() {
                             setMemberProfile(res.data.data);
                         }
                     } catch (e) {
-                        // Profile might not exist yet
                         setMemberProfile(null);
                     }
                 }
@@ -75,22 +74,25 @@ export default function Dashboard() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
             </div>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 md:space-y-8">
-
-            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="space-y-12 md:space-y-16">
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-200 dark:border-slate-800/60">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                        {isAdmin ? 'Admin Overview' : 'My Dashboard'}
+                    <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-3">Dashboard Overview</p>
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
+                        {isAdmin ? 'Admin Dashboard' : 'My Dashboard'}
                     </h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1 text-lg">
-                        Welcome back, <span className="text-indigo-600 dark:text-indigo-400 font-semibold">{user?.email}</span>
-                    </p>
+                </div>
+                <div className="flex flex-1 max-w-[280px] items-center gap-4 px-6 py-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400 flex-1 min-w-0 truncate">
+                        Identity: <span className="text-slate-900 dark:text-slate-100">{user?.email.split('@')[0]}</span>
+                    </span>
                 </div>
             </header>
 
@@ -105,75 +107,75 @@ export default function Dashboard() {
 
 function AdminDashboardView({ stats }: { stats: AdminStats | null }) {
     const statCards = [
-        { label: 'Pending Approval', count: stats?.PENDING || 0, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', darkBg: 'dark:bg-amber-500/10' },
-        { label: 'Approved Profiles', count: stats?.APPROVED || 0, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-100', darkBg: 'dark:bg-emerald-500/10' },
-        { label: 'Active Members', count: stats?.ACTIVE || 0, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-100', darkBg: 'dark:bg-indigo-500/10' },
-        { label: 'Rejected Profiles', count: stats?.REJECTED || 0, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-100', darkBg: 'dark:bg-rose-500/10' },
+        { label: 'Pending Review', count: stats?.PENDING || 0, icon: Clock, color: 'text-amber-500', glow: 'shadow-amber-500/10' },
+        { label: 'Approved Profiles', count: stats?.APPROVED || 0, icon: CheckCircle, color: 'text-emerald-500', glow: 'shadow-emerald-500/10' },
+        { label: 'Active Members', count: stats?.ACTIVE || 0, icon: Users, color: 'text-indigo-500', glow: 'shadow-indigo-500/10' },
+        { label: 'Rejected Profiles', count: stats?.REJECTED || 0, icon: XCircle, color: 'text-rose-500', glow: 'shadow-rose-500/10' },
     ];
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="space-y-16 animate-in fade-in duration-1000">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statCards.map((stat, i) => (
-                    <div key={i} className="bg-white dark:bg-slate-900 p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 transition-all hover:translate-y-[-4px] hover:shadow-md">
-
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{stat.label}</p>
-                                <h3 className="text-3xl font-bold mt-1 text-gray-900 dark:text-white">{stat.count}</h3>
+                    <div key={i} className={`group bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-lg ${stat.glow} hover:-translate-y-2 transition-all duration-500`}>
+                        <div className="flex flex-col gap-6">
+                            <div className="flex items-center justify-between">
+                                <div className={`p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl group-hover:rotate-12 transition-transform duration-500`}>
+                                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                                </div>
+                                <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{stat.count}</span>
                             </div>
-                            <div className={`${stat.bg} ${stat.darkBg} p-4 rounded-2xl`}>
-                                <stat.icon className={`w-8 h-8 ${stat.color}`} />
-                            </div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</p>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 p-6 md:p-8">
-                    <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Admin Quick Actions</h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <Link href="/dashboard/admin/profiles?status=pending" className="flex items-center p-5 rounded-2xl border border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-all group border-l-4 border-l-amber-500">
-                            <div className="bg-amber-100 dark:bg-amber-500/10 p-3 rounded-xl mr-5">
-                                <FileText className="w-6 h-6 text-amber-600" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <div className="lg:col-span-2 space-y-8">
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-widest pl-4 border-l-4 border-indigo-600">Quick Actions</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Link href="/dashboard/admin/profiles?status=pending" className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-800 hover:border-amber-500/30 transition-all duration-500 flex flex-col gap-6">
+                            <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center">
+                                <FileText className="w-6 h-6 text-amber-500" />
                             </div>
-                            <div className="flex-1">
-                                <p className="font-bold text-gray-900 dark:text-white text-lg">Review Pending</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Review new member bio-data</p>
+                            <div>
+                                <h4 className="text-xl font-black text-white mb-2">Review Pipeline</h4>
+                                <p className="text-sm text-slate-400 leading-relaxed">Review and approve pending member bio-data submissions.</p>
                             </div>
-                            <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-amber-500 transition-colors" />
+                            <div className="mt-auto pt-6 flex items-center gap-2 text-amber-500 font-black text-[10px] uppercase tracking-widest">
+                                Open Pipeline <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                            </div>
                         </Link>
-                        
-                        <Link href="/dashboard/admin/users" className="flex items-center p-5 rounded-2xl border border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-all group border-l-4 border-l-indigo-500">
-                            <div className="bg-indigo-100 dark:bg-indigo-500/10 p-3 rounded-xl mr-5">
-                                <Users className="w-6 h-6 text-indigo-600" />
+
+                        <Link href="/dashboard/admin/users" className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-800 hover:border-indigo-500/30 transition-all duration-500 flex flex-col gap-6">
+                            <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center">
+                                <Users className="w-6 h-6 text-indigo-500" />
                             </div>
-                            <div className="flex-1">
-                                <p className="font-bold text-gray-900 dark:text-white text-lg">User Management</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Manage registrations & roles</p>
+                            <div>
+                                <h4 className="text-xl font-black text-white mb-2">Manage Users</h4>
+                                <p className="text-sm text-slate-400 leading-relaxed">Manage system users, permissions, and roles.</p>
                             </div>
-                            <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-indigo-500 transition-colors" />
+                            <div className="mt-auto pt-6 flex items-center gap-2 text-indigo-500 font-black text-[10px] uppercase tracking-widest">
+                                Open Users <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                            </div>
                         </Link>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 p-8">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-8">System Health</h3>
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-500 dark:text-gray-400">API Status</span>
-                            <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold">OPERATIONAL</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-gray-500 dark:text-gray-400">Database</span>
-                            <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold">CONNECTED</span>
-                        </div>
-                    </div>
-                    <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-800">
-                        <p className="text-sm text-gray-400 italic">No alerts at this time.</p>
+                <div className="space-y-8">
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-widest pl-4 border-l-4 border-emerald-500">System Status</h3>
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 space-y-6 shadow-xl">
+                        {[
+                            { label: 'API Server', status: 'SYNCHRONIZED', color: 'text-emerald-500' },
+                            { label: 'Database', status: 'ACTIVE', color: 'text-emerald-500' },
+                            { label: 'File Storage', status: 'LATENCY LOW', color: 'text-indigo-400' }
+                        ].map((node, i) => (
+                            <div key={i} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{node.label}</span>
+                                <span className={`text-[10px] font-black ${node.color} uppercase tracking-widest`}>{node.status}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -187,98 +189,106 @@ function MemberDashboardView({ profile }: { profile: MemberProfile | null }) {
 
     const getStatusInfo = (status: string) => {
         switch (status) {
-            case 'ACTIVE': return { color: 'text-emerald-600', bg: 'bg-emerald-100', label: 'Active Profile', icon: CheckCircle };
-            case 'PENDING': return { color: 'text-amber-600', bg: 'bg-amber-100', label: 'In Review', icon: Clock };
-            case 'REJECTED': return { color: 'text-rose-600', bg: 'bg-rose-100', label: 'Rejected', icon: XCircle };
-            default: return { color: 'text-gray-400', bg: 'bg-gray-100', label: 'Not Found', icon: UserCircle };
+            case 'ACTIVE': return { color: 'text-emerald-500', bg: 'bg-emerald-500/10', label: 'Authorized', icon: CheckCircle };
+            case 'PENDING': return { color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Reviewing', icon: Clock };
+            case 'REJECTED': return { color: 'text-rose-500', bg: 'bg-rose-500/10', label: 'Attention Required', icon: XCircle };
+            default: return { color: 'text-slate-400', bg: 'bg-slate-500/10', label: 'Incomplete', icon: UserCircle };
         }
     };
 
     const statusInfo = getStatusInfo(status);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="lg:col-span-2 space-y-8">
-                <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-800 rounded-2xl md:rounded-[2rem] shadow-xl p-6 md:p-10 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-                    <div className="relative z-10">
-                        <h2 className="text-2xl md:text-3xl font-extrabold mb-3 line-clamp-2 md:line-clamp-none">Hello, {profile?.fullName || 'Member'}!</h2>
-                        <p className="text-indigo-100 text-base md:text-lg mb-8 max-w-md">Find your meaningful connection today. Make sure your bio-data is up to date for better visibility.</p>
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <Link href="/dashboard/profile" className="bg-white text-indigo-700 px-6 md:px-8 py-3.5 rounded-2xl font-bold shadow-soft hover:bg-indigo-50 transition-all hover:scale-105 active:scale-95 text-center">
-                                {isProfileComplete ? 'Manage My Profile' : 'Create My Bio-data'}
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="relative p-12 md:p-16 rounded-[3rem] bg-slate-900 overflow-hidden shadow-2xl">
+                {/* Modern Mesh Gradient Background */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] -mr-40 -mt-40 animate-pulse" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[100px] -ml-20 -mb-20" />
+
+                <div className="relative z-10 grid lg:grid-cols-2 lg:items-center gap-12">
+                    <div className="space-y-8">
+                        <div>
+                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-4">Matchmaking Portal</p>
+                            <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none mb-6">
+                                Welcome, <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-200">
+                                    {profile?.fullName || 'Distinguished Member'}
+                                </span>
+                            </h2>
+                            <p className="text-lg text-slate-300 leading-relaxed max-w-md">Your future meaningful connection begins here. Maintain your bio-data for optimal platform visibility.</p>
+                        </div>
+                        <div className="flex flex-wrap gap-4">
+                            <Link href="/dashboard/profile" className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">
+                                {isProfileComplete ? 'Modify Bio-Data' : 'Initialize Profile'}
                             </Link>
-                            <Link href="/dashboard/matches" className="bg-indigo-500/30 backdrop-blur-md border border-indigo-200/20 text-white px-6 md:px-8 py-3.5 rounded-2xl font-bold hover:bg-indigo-500/40 transition-all hover:scale-105 active:scale-95 text-center">
-                                Browse Matches
+                            <Link href="/dashboard/matches" className="px-8 py-4 bg-slate-800 text-white border border-slate-700/50 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition-all hover:scale-105 active:scale-95 shadow-xl">
+                                Explore Network
                             </Link>
                         </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                    <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-2xl md:rounded-[2rem] shadow-sm border border-gray-100 dark:border-slate-800 group hover:shadow-md transition-all">
-                        <div className="flex items-center space-x-4 md:space-x-5 mb-6">
-                            <div className={`${statusInfo.bg} dark:bg-slate-800 p-3 md:p-4 rounded-xl md:rounded-2xl transition-transform group-hover:scale-110 shrink-0`}>
-                                <statusInfo.icon className={`w-6 h-6 md:w-8 md:h-8 ${statusInfo.color}`} />
-                            </div>
-                            <div>
-                                <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Profile Status</h3>
-                                <p className={`text-xs md:text-sm font-bold uppercase tracking-widest mt-0.5 ${statusInfo.color}`}>{statusInfo.label}</p>
-                            </div>
-                        </div>
-                        <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm md:text-base">
-                            {status === 'PENDING' ? 'Our administrators are currently reviewing your profile for quality verification. This usually takes 24-48 hours.' : 
-                             status === 'ACTIVE' ? 'Congratulatons! Your profile is now active and visible to eligible matches within the platform.' : 
-                             status === 'REJECTED' ? 'Your profile was not approved. Please check your email for details or update your bio-data to resubmit.' :
-                             'Start your journey by creating a comprehensive bio-data. This helps us find the best matches for you.'}
-                        </p>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-2xl md:rounded-[2rem] shadow-sm border border-gray-100 dark:border-slate-800 group hover:shadow-md transition-all">
-                        <div className="flex items-center space-x-4 md:space-x-5 mb-6">
-                            <div className="bg-rose-100 dark:bg-rose-500/10 p-3 md:p-4 rounded-xl md:rounded-2xl transition-transform group-hover:scale-110 shrink-0">
-                                <Heart className="w-6 h-6 md:w-8 md:h-8 text-rose-600" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Shortlisted</h3>
-                                <p className="text-xs md:text-sm font-bold text-gray-500 uppercase tracking-widest mt-0.5">0 Profiles</p>
-                            </div>
-                        </div>
-                        <Link href="/dashboard/matches?tab=shortlisted" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center group text-sm md:text-base">
-                            Manage selection <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    </div>
-                </div>
-
-            </div>
-
-            <div className="space-y-6 md:space-y-8">
-                <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-[2rem] shadow-sm border border-gray-100 dark:border-slate-800 p-6 md:p-8">
-                    <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-6 md:mb-8 flex items-center">
-                        <Bell className="w-5 h-5 md:w-6 md:h-6 mr-3 text-indigo-500" />
-                        Updates
-                    </h3>
-                    <div className="space-y-4 md:space-y-6">
-                        <div className="p-4 md:p-5 bg-indigo-50/50 dark:bg-indigo-500/5 rounded-[1.2rem] md:rounded-[1.5rem] border border-indigo-100/50 dark:border-indigo-500/10">
-                            <p className="font-bold text-gray-900 dark:text-white mb-1 text-xs md:text-sm">Welcome to Parichay!</p>
-                            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Your account has been successfully created. Complete your bio-data to proceed.</p>
-                            <p className="text-[10px] text-indigo-400 font-bold mt-3 uppercase tracking-widest">Just now</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="bg-indigo-900 rounded-2xl md:rounded-[2rem] p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
-                    <div className="relative z-10">
-                        <h4 className="font-bold mb-3 md:mb-4">Need Assistance?</h4>
-                        <p className="text-xs md:text-sm text-indigo-200 mb-6">Our support team is available to help you with profile verification or match assistance.</p>
-                        <button className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-3 rounded-xl md:rounded-2xl transition-all">
-                            Help Center
-                        </button>
                     </div>
                 </div>
             </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/60 shadow-lg group hover:-translate-y-2 transition-all duration-500">
+                        <div className="flex flex-col gap-8">
+                            <div className="flex items-center gap-6">
+                                <div className={`${statusInfo.bg} p-5 rounded-2xl`}>
+                                    <statusInfo.icon className={`w-8 h-8 ${statusInfo.color}`} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Profile Status</p>
+                                    <h3 className={`text-xl font-black uppercase tracking-tighter ${statusInfo.color}`}>{statusInfo.label}</h3>
+                                </div>
+                            </div>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                {status === 'PENDING' ? 'Your profile is under review and will be verified shortly.' :
+                                    status === 'ACTIVE' ? 'Your profile is verified and active.' :
+                                        status === 'REJECTED' ? 'Your profile needs attention. Please update your bio-data.' :
+                                            'Please create your bio-data to start the verification process.'}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/60 shadow-lg group hover:-translate-y-2 transition-all duration-500">
+                        <div className="flex flex-col gap-8">
+                            <div className="flex items-center gap-6">
+                                <div className="p-5 bg-rose-500/10 rounded-2xl">
+                                    <Heart className="w-8 h-8 text-rose-500" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Curated List</p>
+                                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Interest Log</h3>
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <Link href="/dashboard/matches?tab=shortlisted" className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] flex items-center group/link">
+                                    View List <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover/link:translate-x-1 transition-transform" />
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-8">
+                    <div className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl overflow-hidden relative">
+                        <div className="flex items-center gap-3 mb-10">
+                            <Bell className="w-5 h-5 text-indigo-500" />
+                            <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.3em]">Notifications</h3>
+                        </div>
+                        <div className="space-y-6">
+                            <div className="relative pl-6 border-l border-indigo-500/30">
+                                <p className="text-sm font-black text-slate-900 dark:text-white mb-2 leading-tight uppercase tracking-tight">Welcome to Parichay!</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Your account has been created successfully. Welcome aboard.</p>
+                                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Just Now</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
+
 
