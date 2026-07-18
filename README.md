@@ -8,16 +8,25 @@ Parichay is a feature-rich, full-stack matrimonial platform designed to provide 
 
 ### 👤 User Capabilities
 - **Secure Authentication**: JWT-based login and registration system with multi-tier role support.
-- **Comprehensive Bio-Data**: Detailed profile management including personal, family, education, and professional information.
-- **Smart Matchmaking**: Browse and filter profiles to find compatible matches.
-- **Integrated Payments**: Secure financial transactions using **Razorpay Integration** for premium memberships.
+- **Comprehensive Bio-Data**: Detailed profile management including personal, family, education, and professional information, with Gotra tracking for community-specific matchmaking guidance (same-Gotra warnings).
+- **Smart Matchmaking**: Browse and filter profiles (name, gotra, gender, age range, education, city, manglik status) to find compatible matches.
+- **Trust Verification Badges**: Two-tier trust signal — general admin verification plus a premium **Vikas Trust "Community Verified"** badge.
+- **Photo Privacy Controls**: Hide your photo from public view and approve/reject "request access" asks from other members.
+- **Branded PDF Bio-Data**: Download a print-ready, Vikas Trust–branded PDF of your bio-data to share.
+- **QR Profile Sharing**: Generate a scannable QR code linking to your profile, for use at in-person matchmaking events.
+- **Aggarwal Business Directory**: Browse a curated directory of community vendors (caterers, jewelers, tent houses, etc.).
+- **Success Stories**: Read stories of past matches made through the platform.
+- **Integrated Payments**: Secure financial transactions using **Razorpay Integration** for premium membership activation.
 - **Profile Customization**: Upload and manage profile pictures with automated server-side storage.
-- **Responsive Dashboard**: Personalized view of matches, payment status, and profile completion.
+- **Responsive Dashboard**: Personalized, role-aware navigation and a view of matches, payment status, and profile completion.
 
 ### 🛠️ Administrative Control
 - **User Management**: Comprehensive oversight of all registered users (Activate/Deactivate/Delete).
-- **Profile Moderation**: Review and verify user bio-data before making it public.
-- **Dynamic Action System**: Metadata-driven dashboard actions to streamline admin workflows.
+- **Profile Moderation**: Review, approve/reject, and verify user bio-data before making it public.
+- **Trust Badge Management**: Toggle both general verification and Vikas Trust community verification per profile.
+- **Business Directory Management**: Add and manage vendor listings shown as banner ads to engaged users.
+- **Dynamic Action System**: Metadata-driven dashboard actions (per module and status) to streamline admin workflows without frontend redeploys.
+- **Configurable Lookups**: Admin-managed reference data (Gotra, Education, Occupation, Marital Status, etc.) that drives dropdowns across the app.
 - **Real-time Statistics**: High-level dashboard showing total profiles, verification status, and membership tiers.
 
 ---
@@ -34,6 +43,8 @@ Parichay is a feature-rich, full-stack matrimonial platform designed to provide 
   - **H2** (In-memory for rapid development)
 - **Key Libraries**: Lombok, Jackson (JSON handling), Validation API
 - **Payment Gateway**: Razorpay Java SDK
+- **PDF Generation**: OpenPDF (branded Bio-Data export)
+- **QR Codes**: ZXing (profile sharing)
 
 ### Frontend (Next.js)
 - **Framework**: Next.js 15+ (App Router), React 19
@@ -50,12 +61,16 @@ Parichay is a feature-rich, full-stack matrimonial platform designed to provide 
 parichay/
 ├── backend/                   # Spring Boot Enterprise Application
 │   ├── src/main/java/         # Java Source Code (com.aggarjan.patrika.parichay)
-│   │   ├── core/              # Core utilities, payload definitions, security config
+│   │   ├── core/              # Security config, JWT, global exception handling, response envelopes
 │   │   └── modules/           # Feature-based modular architecture
-│   │       ├── admin/         # Administrative logic and controllers
-│   │       ├── auth/          # Authentication & User management
-│   │       ├── profile/       # Bio-data and profile logic
-│   │       └── payment/       # Razorpay integration
+│   │       ├── admin/         # Admin aggregation controller (profiles, users, stats)
+│   │       ├── auth/          # Authentication, registration & user management
+│   │       ├── profile/       # Bio-data, search/masking, PDF export, QR codes, photo requests
+│   │       ├── payment/       # Razorpay integration & membership activation
+│   │       ├── directory/     # Aggarwal Business Directory & banner ads
+│   │       ├── menu/          # Role-aware navigation menu
+│   │       ├── metadata/      # Admin-configurable lookups & row-action metadata
+│   │       └── file/          # File upload handling
 │   ├── src/main/resources/    # Configuration files (application.properties, seeds)
 │   └── pom.xml                # Maven configuration
 ├── frontend/                  # Next.js 15 Client-side Application
@@ -73,19 +88,20 @@ parichay/
 - **JDK**: Version 17 or higher
 - **Node.js**: Version 20+ (recommended)
 - **Build Tool**: Maven 3.x
-- **Database**: PostgreSQL (optional, defaults to H2 if configured)
+- **Database**: PostgreSQL (required by default; an H2 in-memory fallback is available but commented out in config — see below)
 
 ### 1. Backend Setup
 1. **Clone & Navigate**:
    ```bash
    cd backend
    ```
-2. **Database Config**: Edit `src/main/resources/application.properties` to set your PostgreSQL credentials.
+2. **Database Config**: `src/main/resources/application.properties` points at PostgreSQL by default. Update the credentials for your local setup, or create the `parichay_db` database first:
    ```properties
    spring.datasource.url=jdbc:postgresql://localhost:5432/parichay_db
    spring.datasource.username=postgres
    spring.datasource.password=your_password
    ```
+   To run against H2 instead for quick local testing, comment out the PostgreSQL block and uncomment the H2 block already present in the same file.
 3. **Razorpay Setup**: Provide your Razorpay API keys in the same file.
    ```properties
    razorpay.key.id=your_id
@@ -95,6 +111,7 @@ parichay/
    ```bash
    mvn spring-boot:run
    ```
+   The API starts on `http://localhost:8081` (see `server.port` in `application.properties`).
 
 ### 2. Frontend Setup
 1. **Navigate**:
