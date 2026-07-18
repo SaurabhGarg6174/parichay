@@ -39,7 +39,7 @@ export default function MembershipsPage() {
         try {
             setProcessing(true);
             showToast('Initiating secure payment...', 'success');
-            const { data } = await api.post('/payments/initiate', { amount: amountInINR, currency: 'INR' });
+            const { data } = await api.post('/payments', { amount: amountInINR, currency: 'INR' });
             const orderId = data.data.orderId;
 
             const options = {
@@ -52,10 +52,9 @@ export default function MembershipsPage() {
                 handler: async function (response: any) {
                     try {
                         showToast('Verifying payment with bank...', 'success');
-                        await api.post('/payments/verify', { 
-                            orderId: response.razorpay_order_id, 
-                            paymentId: response.razorpay_payment_id, 
-                            razorpaySignature: response.razorpay_signature 
+                        await api.post(`/payments/${response.razorpay_order_id}/verify`, {
+                            paymentId: response.razorpay_payment_id,
+                            razorpaySignature: response.razorpay_signature
                         });
                         showToast('Payment Successful! Welcome aboard!', 'success');
                         window.location.href = "/dashboard/payment/activation";

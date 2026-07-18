@@ -8,6 +8,7 @@ import com.aggarjan.patrika.parichay.modules.payment.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +23,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/initiate")
+    @PostMapping
     public ResponseEntity<ApiResponse<Payment>> initiatePayment(
             @Valid @RequestBody PaymentInitiateRequest request,
             Principal principal) {
@@ -31,12 +32,13 @@ public class PaymentController {
                 "Payment initiated successfully"));
     }
 
-    @PostMapping("/verify")
+    @PostMapping("/{orderId}/verify")
     public ResponseEntity<ApiResponse<Payment>> verifyPayment(
+            @PathVariable String orderId,
             @Valid @RequestBody PaymentVerifyRequest request,
             Principal principal) {
         return ResponseEntity.ok(ApiResponse.success(
-                paymentService.verifyPayment(request, principal.getName()),
+                paymentService.verifyPayment(orderId, request, principal.getName()),
                 "Payment verified and profile activated successfully"));
     }
 }

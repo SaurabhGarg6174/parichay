@@ -14,6 +14,11 @@
             "key": "auth_token",
             "value": "",
             "type": "string"
+        },
+        {
+            "key": "refresh_token",
+            "value": "",
+            "type": "string"
         }
     ],
     "item": [
@@ -53,22 +58,54 @@
                     "request": {
                         "method": "POST",
                         "header": [
-                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                            { "key": "Content-Type", "value": "application/json" }
                         ],
-                        "url": { "raw": "{{base_url}}/auth/refresh", "host": [ "{{base_url}}" ], "path": [ "auth", "refresh" ] }
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/auth/refresh-token", "host": [ "{{base_url}}" ], "path": [ "auth", "refresh-token" ] }
                     }
                 },
                 {
-                    "name": "Manage Password",
+                    "name": "Forgot Password",
                     "request": {
                         "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john@example.com\"\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/auth/forgot-password", "host": [ "{{base_url}}" ], "path": [ "auth", "forgot-password" ] }
+                    }
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"token\": \"reset-token-from-email\",\n  \"newPassword\": \"newPassword123\",\n  \"confirmationPassword\": \"newPassword123\"\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/auth/reset-password", "host": [ "{{base_url}}" ], "path": [ "auth", "reset-password" ] }
+                    }
+                },
+                {
+                    "name": "Change Password",
+                    "request": {
+                        "method": "PATCH",
                         "header": [
                             { "key": "Content-Type", "value": "application/json" },
                             { "key": "Authorization", "value": "Bearer {{auth_token}}" }
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"oldPassword\": \"password\",\n  \"newPassword\": \"newPassword123\"\n}"
+                            "raw": "{\n  \"currentPassword\": \"password\",\n  \"newPassword\": \"newPassword123\",\n  \"confirmationPassword\": \"newPassword123\"\n}"
                         },
                         "url": { "raw": "{{base_url}}/auth/password", "host": [ "{{base_url}}" ], "path": [ "auth", "password" ] }
                     }
@@ -88,8 +125,12 @@
                     "request": {
                         "method": "POST",
                         "header": [
-                            { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+                            { "key": "Content-Type", "value": "application/json" }
                         ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+                        },
                         "url": { "raw": "{{base_url}}/auth/logout", "host": [ "{{base_url}}" ], "path": [ "auth", "logout" ] }
                     }
                 }
@@ -182,9 +223,9 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"amount\": 100.0\n}"
+                            "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"INR\"\n}"
                         },
-                        "url": { "raw": "{{base_url}}/payments/initiate", "host": [ "{{base_url}}" ], "path": [ "payments", "initiate" ] }
+                        "url": { "raw": "{{base_url}}/payments", "host": [ "{{base_url}}" ], "path": [ "payments" ] }
                     }
                 },
                 {
@@ -197,9 +238,9 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"paymentId\": \"PAY_123456\",\n  \"signature\": \"SIGN_123456\"\n}"
+                            "raw": "{\n  \"paymentId\": \"PAY_123456\",\n  \"razorpaySignature\": \"SIGN_123456\"\n}"
                         },
-                        "url": { "raw": "{{base_url}}/payments/verify", "host": [ "{{base_url}}" ], "path": [ "payments", "verify" ] }
+                        "url": { "raw": "{{base_url}}/payments/ORDER_ID/verify", "host": [ "{{base_url}}" ], "path": [ "payments", "ORDER_ID", "verify" ] }
                     }
                 }
             ]
@@ -229,11 +270,16 @@
                 {
                     "name": "Update Profile Status",
                     "request": {
-                        "method": "PUT",
+                        "method": "PATCH",
                         "header": [
+                            { "key": "Content-Type", "value": "application/json" },
                             { "key": "Authorization", "value": "Bearer {{auth_token}}" }
                         ],
-                        "url": { "raw": "{{base_url}}/admin/profiles/1/status/2", "host": [ "{{base_url}}" ], "path": [ "admin", "profiles", "1", "status", "2" ] }
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"statusId\": 2\n}"
+                        },
+                        "url": { "raw": "{{base_url}}/admin/profiles/1/status", "host": [ "{{base_url}}" ], "path": [ "admin", "profiles", "1", "status" ] }
                     }
                 }
             ]

@@ -74,9 +74,9 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment verifyPayment(PaymentVerifyRequest request, String userEmail) {
-        Payment payment = paymentRepo.findByOrderId(request.orderId())
-                .orElseThrow(() -> new ResourceNotFoundException("Payment Order not found: " + request.orderId()));
+    public Payment verifyPayment(String orderId, PaymentVerifyRequest request, String userEmail) {
+        Payment payment = paymentRepo.findByOrderId(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment Order not found: " + orderId));
 
         if (!payment.getUser().getEmail().equals(userEmail)) {
             throw new BadRequestException("Payment does not belong to user");
@@ -88,7 +88,7 @@ public class PaymentService {
 
         try {
             JSONObject options = new JSONObject();
-            options.put("razorpay_order_id", request.orderId());
+            options.put("razorpay_order_id", orderId);
             options.put("razorpay_payment_id", request.paymentId());
             options.put("razorpay_signature", request.razorpaySignature());
             boolean status = Utils.verifyPaymentSignature(options, razorpayKeySecret);

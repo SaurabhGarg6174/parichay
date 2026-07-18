@@ -80,7 +80,7 @@ export default function AdminDashboard() {
 
     const updateStatus = async (profileId: number, newStatusId: number) => {
         try {
-            await api.put(`/admin/profiles/${profileId}/status/${newStatusId}`);
+            await api.patch(`/admin/profiles/${profileId}/status`, { statusId: newStatusId });
             fetchProfiles();
             fetchStats();
         } catch (err) {

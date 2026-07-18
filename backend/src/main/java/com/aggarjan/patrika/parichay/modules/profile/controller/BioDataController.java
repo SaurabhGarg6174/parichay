@@ -2,6 +2,7 @@ package com.aggarjan.patrika.parichay.modules.profile.controller;
 
 import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSearchRequest;
 import com.aggarjan.patrika.parichay.modules.profile.dto.BioDataSubmissionRequest;
+import com.aggarjan.patrika.parichay.modules.profile.dto.PhotoRequestStatusUpdateRequest;
 import com.aggarjan.patrika.parichay.modules.profile.model.BioData;
 import com.aggarjan.patrika.parichay.modules.profile.service.ProfileService;
 import com.aggarjan.patrika.parichay.core.payload.ApiResponse;
@@ -65,7 +66,7 @@ public class BioDataController {
                                                 "Profiles searched successfully"));
         }
 
-        @GetMapping("/{id}/download-pdf")
+        @GetMapping("/{id}/pdf")
         public ResponseEntity<InputStreamResource> downloadBioDataPdf(@PathVariable Long id, java.security.Principal principal) {
                 BioData bioData = profileService.getBioDataById(id, principal != null ? principal.getName() : null);
                 ByteArrayInputStream bis = pdfService.generateBioDataPdf(bioData);
@@ -80,7 +81,7 @@ public class BioDataController {
                                 .body(new InputStreamResource(bis));
         }
 
-        @PostMapping("/{id}/request-photo")
+        @PostMapping("/{id}/photo-requests")
         public ResponseEntity<ApiResponse<PhotoRequest>> requestPhoto(@PathVariable Long id, java.security.Principal principal) {
                 return ResponseEntity.ok(ApiResponse.success(
                                 profileService.requestPhotoAccess(id, principal.getName()),
@@ -94,12 +95,12 @@ public class BioDataController {
                                 "Incoming photo requests fetched successfully"));
         }
 
-        @PutMapping("/photo-requests/{requestId}/respond/{status}")
+        @PatchMapping("/photo-requests/{requestId}")
         public ResponseEntity<ApiResponse<PhotoRequest>> respondToPhotoRequest(
                         @PathVariable Long requestId,
-                        @PathVariable String status) {
+                        @Valid @RequestBody PhotoRequestStatusUpdateRequest request) {
                 return ResponseEntity.ok(ApiResponse.success(
-                                profileService.respondToPhotoRequest(requestId, status),
+                                profileService.respondToPhotoRequest(requestId, request.status()),
                                 "Photo request responded successfully"));
         }
 

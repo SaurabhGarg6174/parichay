@@ -131,7 +131,7 @@ export default function MatchDetailPage() {
                                         onClick={async (e) => {
                                             e.stopPropagation();
                                             try {
-                                                await api.post(`/profiles/${profile.id}/request-photo`);
+                                                await api.post(`/profiles/${profile.id}/photo-requests`);
                                                 showToast('Photo access requested!', 'success');
                                             } catch (e) {
                                                 showToast('Failed to request access', 'error');
@@ -191,7 +191,7 @@ export default function MatchDetailPage() {
                                 <button 
                                     onClick={async () => {
                                         try {
-                                            const res = await api.get(`/profiles/${profile.id}/download-pdf`, { responseType: 'blob' });
+                                            const res = await api.get(`/profiles/${profile.id}/pdf`, { responseType: 'blob' });
                                             const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
                                             const link = document.createElement('a'); link.href = url;
                                             link.setAttribute('download', `Dossier_${profile.fullName.replace(/\s+/g, '_')}.pdf`);

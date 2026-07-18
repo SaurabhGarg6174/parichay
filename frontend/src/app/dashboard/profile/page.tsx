@@ -231,7 +231,7 @@ export default function ProfilePage() {
 
     const handleRespondToRequest = async (requestId: number, status: string) => {
         try {
-            await api.put(`/profiles/photo-requests/${requestId}/respond/${status}`);
+            await api.patch(`/profiles/photo-requests/${requestId}`, { status });
             showToast(`Request ${status.toLowerCase()} successfully`, 'success');
             // Refresh requests
             const reqRes = await api.get('/profiles/photo-requests');
@@ -250,7 +250,7 @@ export default function ProfilePage() {
 
         try {
             setPopup({ show: true, message: 'Uploading image...', type: 'success' });
-            const res = await api.post('/files/upload', formDataFile);
+            const res = await api.post('/files', formDataFile);
             if (res.data?.data) {
                 setFormData(prev => ({ ...prev, photoUrl: res.data.data }));
                 setPopup({ show: true, message: 'Image uploaded successfully!', type: 'success' });
@@ -264,7 +264,7 @@ export default function ProfilePage() {
     const handleMakePayment = async () => {
         try {
             setPopup({ show: true, message: 'Initiating payment...', type: 'success' });
-            const { data } = await api.post('/payments/initiate', { amount: 500, currency: 'INR' });
+            const { data } = await api.post('/payments', { amount: 500, currency: 'INR' });
             const orderId = data.data.orderId;
             closePopup();
 
@@ -278,10 +278,9 @@ export default function ProfilePage() {
                 handler: async function (response: any) {
                     try {
                         setPopup({ show: true, message: 'Verifying payment...', type: 'success' });
-                        await api.post('/payments/verify', { 
-                            orderId: response.razorpay_order_id, 
-                            paymentId: response.razorpay_payment_id, 
-                            razorpaySignature: response.razorpay_signature 
+                        await api.post(`/payments/${response.razorpay_order_id}/verify`, {
+                            paymentId: response.razorpay_payment_id,
+                            razorpaySignature: response.razorpay_signature
                         });
                         setPopup({ show: true, message: 'Payment Successful & profile activated!', type: 'success' });
                         loadProfile();
@@ -340,7 +339,7 @@ export default function ProfilePage() {
                                 <button 
                                     onClick={async () => {
                                         try {
-                                            const res = await api.get(`/profiles/${profile.id}/download-pdf`, { responseType: 'blob' });
+                                            const res = await api.get(`/profiles/${profile.id}/pdf`, { responseType: 'blob' });
                                             const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
                                             const link = document.createElement('a'); link.href = url;
                                             link.setAttribute('download', `Dossier_${profile.fullName.replace(/\s+/g, '_')}.pdf`);

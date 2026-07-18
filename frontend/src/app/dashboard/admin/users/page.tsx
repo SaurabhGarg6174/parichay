@@ -87,7 +87,7 @@ export default function AdminUsersPage() {
             message: `Are you sure you want to ${currentEnabled ? 'inactivate' : 'activate'} this user account?`,
             action: async () => {
                 try {
-                    const res = await api.put(`/admin/users/${userId}/status/${!currentEnabled}`);
+                    const res = await api.patch(`/admin/users/${userId}/status`, { enabled: !currentEnabled });
                     if (res.data?.success) {
                         setUsers(prev => prev.filter(u => u.id !== userId));
                         setConfirmModal(prev => ({ ...prev, isOpen: false }));

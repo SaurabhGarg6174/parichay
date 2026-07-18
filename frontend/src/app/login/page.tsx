@@ -5,6 +5,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ export default function Login() {
                 // Fetch user data
                 localStorage.setItem('token', data.data.token);
                 const meRes = await api.get('/auth/me', { headers: { Authorization: `Bearer ${data.data.token}` } });
-                login(data.data.token, meRes.data.data);
+                login(data.data.token, meRes.data.data, data.data.refreshToken);
 
                 if (meRes.data.data.roles?.some((r: any) => r.name === 'ADMIN')) {
                     router.push('/admin');
@@ -59,7 +60,12 @@ export default function Login() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                        <div className="flex items-center justify-between mb-1">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                            <Link href="/forgot-password" className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
+                                Forgot password?
+                            </Link>
+                        </div>
                         <div className="relative">
                             <input
                                 type={showPassword ? 'text' : 'password'}

@@ -14,16 +14,15 @@ import com.aggarjan.patrika.parichay.core.exception.BadRequestException;
 import com.aggarjan.patrika.parichay.core.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,16 +30,24 @@ import java.util.UUID;
 import java.time.LocalDateTime;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional
 public class AuthenticationService {
+        private static final int MAX_FAILED_LOGIN_ATTEMPTS = 5;
+        private static final int ACCOUNT_LOCKOUT_MINUTES = 15;
+
         private final UserRepository repository;
         private final RoleRepository roleRepository;
         private final UserProfileRepository userProfileRepository;
         private final PasswordResetTokenRepository passwordResetTokenRepository;
         private final PasswordEncoder passwordEncoder;
         private final JwtService jwtService;
+        private final RefreshTokenService refreshTokenService;
         private final AuthenticationManager authenticationManager;
+
+        @Value("${app.frontend.base-url}")
+        private String frontendBaseUrl;
 
         public AuthenticationResponse register(RegisterRequest request) {
                 if (repository.existsByEmail(request.email())) {
@@ -65,25 +72,52 @@ public class AuthenticationService {
                                 .build();
                 userProfileRepository.save(profile);
 
-                var jwtToken = jwtService.generateToken(user);
+                var jwtToken = jwtService.generateToken(savedUser);
+                var refreshToken = refreshTokenService.createToken(savedUser);
                 return AuthenticationResponse.builder()
                                 .token(jwtToken)
+                                .refreshToken(refreshToken)
                                 .build();
         }
 
         public AuthenticationResponse authenticate(AuthenticationRequest request) {
-                authenticationManager.authenticate(
-                                new UsernamePasswordAuthenticationToken(
-                                                request.email(),
-                                                request.password()));
+                try {
+                        authenticationManager.authenticate(
+                                        new UsernamePasswordAuthenticationToken(
+                                                        request.email(),
+                                                        request.password()));
+                } catch (BadCredentialsException ex) {
+                        registerFailedLoginAttempt(request.email());
+                        throw ex;
+                }
+
                 var user = repository.findByEmail(request.email())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "User not found with email: " + request.email()));
 
+                if (user.getFailedLoginAttempts() > 0 || user.getLockedUntil() != null) {
+                        user.setFailedLoginAttempts(0);
+                        user.setLockedUntil(null);
+                        repository.save(user);
+                }
+
                 var jwtToken = jwtService.generateToken(user);
+                var refreshToken = refreshTokenService.createToken(user);
                 return AuthenticationResponse.builder()
                                 .token(jwtToken)
+                                .refreshToken(refreshToken)
                                 .build();
+        }
+
+        private void registerFailedLoginAttempt(String email) {
+                repository.findByEmail(email).ifPresent(user -> {
+                        int attempts = user.getFailedLoginAttempts() + 1;
+                        user.setFailedLoginAttempts(attempts);
+                        if (attempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
+                                user.setLockedUntil(LocalDateTime.now().plusMinutes(ACCOUNT_LOCKOUT_MINUTES));
+                        }
+                        repository.save(user);
+                });
         }
 
         public void changePassword(ChangePasswordRequest request, String email) {
@@ -126,31 +160,28 @@ public class AuthenticationService {
                                 user.isEnabled());
         }
 
-        public AuthenticationResponse refreshToken(String authHeader) {
-                final String refreshToken;
-                final String userEmail;
-                if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                        throw new BadRequestException("Refresh token is missing or invalid");
+        public AuthenticationResponse refreshToken(String rawRefreshToken) {
+                var result = refreshTokenService.rotate(rawRefreshToken);
+                var accessToken = jwtService.generateToken(result.user());
+                return AuthenticationResponse.builder()
+                                .token(accessToken)
+                                .refreshToken(result.rawToken())
+                                .build();
+        }
+
+        public void logout(String rawRefreshToken) {
+                if (rawRefreshToken != null && !rawRefreshToken.isBlank()) {
+                        refreshTokenService.revoke(rawRefreshToken);
                 }
-                refreshToken = authHeader.substring(7);
-                userEmail = jwtService.extractUsername(refreshToken);
-                if (userEmail != null) {
-                        var user = this.repository.findByEmail(userEmail)
-                                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-                        if (jwtService.isTokenValid(refreshToken, user)) {
-                                var accessToken = jwtService.generateToken(user);
-                                return AuthenticationResponse.builder()
-                                                .token(accessToken)
-                                                .build();
-                        }
-                }
-                throw new BadRequestException("Invalid refresh token");
         }
 
         public void forgotPassword(String email) {
-                var user = repository.findByEmail(email)
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "User not found with email: " + email));
+                var userOpt = repository.findByEmail(email);
+                // Stay silent on an unknown email so this endpoint can't be used to enumerate registered accounts.
+                if (userOpt.isEmpty()) {
+                        return;
+                }
+                var user = userOpt.get();
 
                 passwordResetTokenRepository.deleteByUser(user);
 
@@ -163,8 +194,10 @@ public class AuthenticationService {
 
                 passwordResetTokenRepository.save(token);
 
-                // TODO: Integrate actual Email Sending logic here
-                // Token generated: " + tokenPattern
+                String resetLink = frontendBaseUrl + "/reset-password?token=" + tokenPattern;
+                // DEV STUB: no email provider is wired up yet, so log the link instead of sending it.
+                // Swap this out for a real mail send before this goes anywhere near production.
+                log.info("[DEV] Password reset link for {}: {}", email, resetLink);
         }
 
         public void resetPassword(ResetPasswordRequest request) {
@@ -185,44 +218,5 @@ public class AuthenticationService {
                 repository.save(user);
 
                 passwordResetTokenRepository.delete(resetToken);
-        }
-
-        public String managePassword(PasswordManagementRequest request, String userEmail) {
-                if (request.action() == null) {
-                        throw new BadRequestException("Action is required");
-                }
-
-                switch (request.action().toUpperCase()) {
-                        case "CHANGE":
-                                if (userEmail == null) {
-                                        throw new BadRequestException("Authentication required to change password");
-                                }
-                                if (request.currentPassword() == null || request.newPassword() == null
-                                                || request.confirmationPassword() == null) {
-                                        throw new BadRequestException("Missing required fields for password change");
-                                }
-                                changePassword(new ChangePasswordRequest(request.currentPassword(),
-                                                request.newPassword(), request.confirmationPassword()), userEmail);
-                                return "Password changed successfully";
-
-                        case "FORGOT":
-                                if (request.email() == null || request.email().isBlank()) {
-                                        throw new BadRequestException("Email is required for forgot password");
-                                }
-                                forgotPassword(request.email());
-                                return "Password reset link processing logic invoked successfully";
-
-                        case "RESET":
-                                if (request.token() == null || request.newPassword() == null
-                                                || request.confirmationPassword() == null) {
-                                        throw new BadRequestException("Missing required fields for password reset");
-                                }
-                                resetPassword(new ResetPasswordRequest(request.token(), request.newPassword(),
-                                                request.confirmationPassword()));
-                                return "Password reset successfully";
-
-                        default:
-                                throw new BadRequestException("Invalid password action: " + request.action());
-                }
         }
 }

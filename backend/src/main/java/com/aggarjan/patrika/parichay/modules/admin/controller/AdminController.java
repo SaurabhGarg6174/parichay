@@ -2,9 +2,13 @@ package com.aggarjan.patrika.parichay.modules.admin.controller;
 
 import com.aggarjan.patrika.parichay.core.payload.ApiResponse;
 import com.aggarjan.patrika.parichay.core.payload.PagedResponse;
+import com.aggarjan.patrika.parichay.modules.admin.dto.StatusUpdateRequest;
+import com.aggarjan.patrika.parichay.modules.admin.dto.UserStatusUpdateRequest;
+import com.aggarjan.patrika.parichay.modules.admin.dto.VerificationUpdateRequest;
 import com.aggarjan.patrika.parichay.modules.metadata.service.ActionService;
 import com.aggarjan.patrika.parichay.modules.profile.model.BioData;
 import com.aggarjan.patrika.parichay.modules.profile.service.ProfileService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,12 +50,12 @@ public class AdminController {
                 "Profile fetched successfully"));
     }
 
-    @PutMapping("/profiles/{profileId}/status/{statusId}")
+    @PatchMapping("/profiles/{profileId}/status")
     public ResponseEntity<ApiResponse<BioData>> updateProfileStatus(
             @PathVariable Long profileId,
-            @PathVariable Long statusId) {
+            @Valid @RequestBody StatusUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
-                profileService.updateProfileStatus(profileId, statusId),
+                profileService.updateProfileStatus(profileId, request.statusId()),
                 "Profile status updated successfully"));
     }
 
@@ -62,21 +66,21 @@ public class AdminController {
                 "Stats fetched successfully"));
     }
 
-    @PutMapping("/profiles/{profileId}/verify/{verified}")
+    @PatchMapping("/profiles/{profileId}/verification")
     public ResponseEntity<ApiResponse<BioData>> updateProfileVerification(
             @PathVariable Long profileId,
-            @PathVariable boolean verified) {
+            @RequestBody VerificationUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
-                profileService.updateVerificationStatus(profileId, verified),
+                profileService.updateVerificationStatus(profileId, request.verified()),
                 "Profile verification status updated successfully"));
     }
 
-    @PutMapping("/profiles/{profileId}/verify-community/{verified}")
+    @PatchMapping("/profiles/{profileId}/community-verification")
     public ResponseEntity<ApiResponse<BioData>> updateCommunityVerification(
             @PathVariable Long profileId,
-            @PathVariable boolean verified) {
+            @RequestBody VerificationUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
-                profileService.updateCommunityVerificationStatus(profileId, verified),
+                profileService.updateCommunityVerificationStatus(profileId, request.verified()),
                 "Profile community verification status updated successfully"));
     }
 
@@ -103,11 +107,11 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(null, "User deleted successfully"));
     }
 
-    @PutMapping("/users/{userId}/status/{active}")
+    @PatchMapping("/users/{userId}/status")
     public ResponseEntity<ApiResponse<Void>> updateUserStatus(
             @PathVariable Long userId,
-            @PathVariable boolean active) {
-        userService.updateUserStatus(userId, active);
+            @RequestBody UserStatusUpdateRequest request) {
+        userService.updateUserStatus(userId, request.enabled());
         return ResponseEntity.ok(ApiResponse.success(null, "User status updated successfully"));
     }
 

@@ -5,7 +5,6 @@ import com.aggarjan.patrika.parichay.modules.auth.dto.*;
 import com.aggarjan.patrika.parichay.modules.auth.service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,18 +29,30 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(service.authenticate(request), "Login successful"));
     }
 
-    @PostMapping("/refresh")
+    @PostMapping("/refresh-token")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> refreshToken(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
-        return ResponseEntity.ok(ApiResponse.success(service.refreshToken(authHeader), "Token refreshed successfully"));
+            @Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(service.refreshToken(request.refreshToken()), "Token refreshed successfully"));
     }
 
-    @PostMapping("/password")
-    public ResponseEntity<ApiResponse<Void>> managePassword(
-            @Valid @RequestBody PasswordManagementRequest request,
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        service.forgotPassword(request.email());
+        return ResponseEntity.ok(ApiResponse.success(null, "If that email is registered, a password reset link has been sent"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        service.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success(null, "Password reset successfully"));
+    }
+
+    @PatchMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
             Principal principal) {
-        String message = service.managePassword(request, principal != null ? principal.getName() : null);
-        return ResponseEntity.ok(ApiResponse.success(null, message));
+        service.changePassword(request, principal.getName());
+        return ResponseEntity.ok(ApiResponse.success(null, "Password changed successfully"));
     }
 
     @GetMapping("/me")
@@ -54,7 +65,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout() {
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestBody(required = false) RefreshTokenRequest request) {
+        service.logout(request != null ? request.refreshToken() : null);
         return ResponseEntity.ok(ApiResponse.success(null, "Logged out successfully"));
     }
 }

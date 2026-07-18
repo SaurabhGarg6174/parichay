@@ -5,6 +5,7 @@ import com.aggarjan.patrika.parichay.modules.directory.model.BusinessListing;
 import com.aggarjan.patrika.parichay.modules.directory.service.BusinessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,7 +31,8 @@ public class BusinessController {
                 "Random ad fetched successfully"));
     }
 
-    @PostMapping("/admin/add")
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<BusinessListing>> addBusinessListing(@RequestBody BusinessListing listing) {
         return ResponseEntity.ok(ApiResponse.success(
                 businessService.saveListing(listing),

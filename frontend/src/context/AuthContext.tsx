@@ -14,7 +14,7 @@ interface User {
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    login: (token: string, user: User) => void;
+    login: (token: string, user: User, refreshToken?: string) => void;
     logout: () => void;
 }
 
@@ -43,10 +43,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     setUser(response.data.data);
                 } else {
                     localStorage.removeItem('token');
+                    localStorage.removeItem('refreshToken');
                 }
             } catch (error) {
                 console.error('Failed to fetch user', error);
                 localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
             } finally {
                 setLoading(false);
             }
@@ -54,13 +56,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         fetchUser();
     }, []);
 
-    const login = (token: string, userData: User) => {
+    const login = (token: string, userData: User, refreshToken?: string) => {
         localStorage.setItem('token', token);
+        if (refreshToken) {
+            localStorage.setItem('refreshToken', refreshToken);
+        }
         setUser(userData);
     };
 
     const logout = () => {
+        const refreshToken = localStorage.getItem('refreshToken');
+        // Best-effort revoke on the server; the local session is cleared regardless of the outcome.
+        if (refreshToken) {
+            api.post('/auth/logout', { refreshToken }).catch(() => { });
+        }
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         setUser(null);
         window.location.href = '/login';
     };

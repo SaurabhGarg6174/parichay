@@ -122,7 +122,7 @@ function AdminProfilesContent() {
             const statusObj = statuses.find(s => s.name === statusName);
             if (!statusObj) return;
 
-            const res = await api.put(`/admin/profiles/${profileId}/status/${statusObj.id}`);
+            const res = await api.patch(`/admin/profiles/${profileId}/status`, { statusId: statusObj.id });
             if (res.data?.success) {
                 // Remove from list if status changed
                 if (statusName !== statusFilter) {
@@ -140,7 +140,7 @@ function AdminProfilesContent() {
 
     const handleToggleVerification = async (profileId: number, currentVerified: boolean) => {
         try {
-            const res = await api.put(`/admin/profiles/${profileId}/verify/${!currentVerified}`);
+            const res = await api.patch(`/admin/profiles/${profileId}/verification`, { verified: !currentVerified });
             if (res.data?.success) {
                 setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, verified: !currentVerified } : p));
                 showToast(`Profile ${!currentVerified ? 'verified' : 'unverified'} successfully`, 'success');
