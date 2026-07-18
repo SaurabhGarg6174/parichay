@@ -1,4 +1,4 @@
-package com.aggarjan.patrika.parichay.modules.payment.repo;
+package com.aggarjan.patrika.parichay.modules.payment.repository;
 
 import com.aggarjan.patrika.parichay.modules.payment.model.Payment;
 import com.aggarjan.patrika.parichay.modules.payment.model.PaymentStatus;

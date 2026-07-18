@@ -23,8 +23,10 @@ out/
 
 # Backend specific (if not covered by generic)
 backend/target/
-backend/startup_log.txt
 backend/uploads/
+backend/*.log
+backend/*_log.txt
+backend/compile_logs.txt
 
 # Frontend specific (if not covered by generic)
 frontend/node_modules/

@@ -12,6 +12,7 @@ import com.aggarjan.patrika.parichay.modules.profile.repository.MembershipStatus
 import com.aggarjan.patrika.parichay.modules.profile.repository.PhotoRequestRepo;
 import com.aggarjan.patrika.parichay.modules.profile.repository.SuccessStoryRepo;
 import com.aggarjan.patrika.parichay.modules.profile.service.ProfileService;
+import com.aggarjan.patrika.parichay.modules.auth.service.UserService;
 import com.aggarjan.patrika.parichay.core.exception.BadRequestException;
 import com.aggarjan.patrika.parichay.core.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProfileServiceImpl implements ProfileService {
 
-        private final com.aggarjan.patrika.parichay.modules.auth.repo.UserRepository userRepository;
+        private final UserService userService;
         private final MembershipStatusRepo membershipStatusRepo;
         private final BioDataRepo bioDataRepo;
         private final PhotoRequestRepo photoRequestRepo;
@@ -40,8 +41,7 @@ public class ProfileServiceImpl implements ProfileService {
         public BioData submitBioData(BioDataSubmissionRequest request, String userEmail) {
                 log.info("Received bio-data submission for: {}", request.fullName());
 
-                var user = userRepository.findByEmail(userEmail)
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+                var user = userService.getUserByEmailOrThrow(userEmail);
 
                 // Start: Refactored to prevent duplicate profiles
                 if (bioDataRepo.findByUser_Email(userEmail).isPresent()) {

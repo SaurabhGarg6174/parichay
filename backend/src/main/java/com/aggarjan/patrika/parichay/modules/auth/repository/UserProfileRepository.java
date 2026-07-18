@@ -1,4 +1,4 @@
-package com.aggarjan.patrika.parichay.modules.auth.repo;
+package com.aggarjan.patrika.parichay.modules.auth.repository;
 
 import com.aggarjan.patrika.parichay.modules.auth.model.UserProfile;
 import org.springframework.data.jpa.repository.JpaRepository;

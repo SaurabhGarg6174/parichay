@@ -1,6 +1,6 @@
 package com.aggarjan.patrika.parichay.core.security;
 
-import com.aggarjan.patrika.parichay.modules.auth.repo.UserRepository;
+import com.aggarjan.patrika.parichay.modules.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

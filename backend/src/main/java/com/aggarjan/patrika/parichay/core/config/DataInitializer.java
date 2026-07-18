@@ -1,11 +1,11 @@
 package com.aggarjan.patrika.parichay.core.config;
 
 import com.aggarjan.patrika.parichay.modules.auth.model.Role;
-import com.aggarjan.patrika.parichay.modules.auth.repo.RoleRepository;
+import com.aggarjan.patrika.parichay.modules.auth.repository.RoleRepository;
 import com.aggarjan.patrika.parichay.modules.metadata.model.Action;
 import com.aggarjan.patrika.parichay.modules.metadata.model.Lookup;
-import com.aggarjan.patrika.parichay.modules.metadata.repo.ActionRepo;
-import com.aggarjan.patrika.parichay.modules.metadata.repo.LookupRepo;
+import com.aggarjan.patrika.parichay.modules.metadata.repository.ActionRepo;
+import com.aggarjan.patrika.parichay.modules.metadata.repository.LookupRepo;
 import com.aggarjan.patrika.parichay.modules.profile.model.MembershipStatus;
 import com.aggarjan.patrika.parichay.modules.profile.repository.MembershipStatusRepo;
 import lombok.RequiredArgsConstructor;

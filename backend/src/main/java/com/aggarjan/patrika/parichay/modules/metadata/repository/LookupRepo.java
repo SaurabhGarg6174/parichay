@@ -1,4 +1,4 @@
-package com.aggarjan.patrika.parichay.modules.metadata.repo;
+package com.aggarjan.patrika.parichay.modules.metadata.repository;
 
 import com.aggarjan.patrika.parichay.modules.metadata.model.Lookup;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,11 +1,10 @@
-package com.aggarjan.patrika.parichay.modules.file;
+package com.aggarjan.patrika.parichay.modules.file.service.impl;
 
-import com.aggarjan.patrika.parichay.core.payload.ApiResponse;
-import lombok.RequiredArgsConstructor;
+import com.aggarjan.patrika.parichay.core.exception.BadRequestException;
+import com.aggarjan.patrika.parichay.modules.file.service.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -15,20 +14,17 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
-@RestController
-@RequestMapping("/api/v1/files")
-@RequiredArgsConstructor
+@Service
 @Slf4j
-@CrossOrigin(origins = "*")
-public class FileController {
+public class FileStorageServiceImpl implements FileStorageService {
 
     @Value("${file.upload.dir:uploads}")
     private String uploadDir;
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<String>> uploadFile(@RequestParam("file") MultipartFile file) {
+    @Override
+    public String store(MultipartFile file) {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("File is empty", null));
+            throw new BadRequestException("File is empty");
         }
 
         try {
@@ -47,14 +43,10 @@ public class FileController {
             Path filePath = uploadPath.resolve(newFilename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            String fileUrl = "/uploads/" + newFilename;
-
-            return ResponseEntity.ok(ApiResponse.success(fileUrl, "File uploaded successfully"));
-
+            return "/uploads/" + newFilename;
         } catch (IOException e) {
             log.error("Failed to store file", e);
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Failed to upload file", e.getMessage()));
+            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
         }
     }
 }
