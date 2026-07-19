@@ -48,7 +48,7 @@ export default function BusinessDirectoryPage() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                     <div className="space-y-4">
                         <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.5em]">Business Network</h4>
-                        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none">Business Directory</h1>
+                        <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">Business Directory</h1>
                         <p className="text-lg text-slate-500 font-medium max-w-xl">Discover and connect with community businesses and enterprises.</p>
                     </div>
                 </div>

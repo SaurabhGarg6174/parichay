@@ -320,7 +320,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                     <div className="space-y-4">
                         <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.5em]">Manage Profile</h4>
-                        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none">My Profile</h1>
+                        <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">My Profile</h1>
                         <p className="text-lg text-slate-500 font-medium max-w-xl">Manage your matrimonial bio-data, photos, and privacy settings.</p>
                     </div>
                 </div>
@@ -698,7 +698,7 @@ export default function ProfilePage() {
                                     )}
                                 </div>
                                 <div className="text-center sm:text-left space-y-2">
-                                    <h2 className="text-2xl md:text-4xl font-black text-white tracking-tighter leading-none">{profile?.fullName}</h2>
+                                    <h2 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{profile?.fullName}</h2>
                                     <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em]">{profile?.occupation || 'Role Unassigned'}</p>
                                     <div className="flex gap-2 justify-center sm:justify-start pt-2">
                                         <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[8px] font-black text-emerald-400 uppercase tracking-widest">Identity Verified</div>

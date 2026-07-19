@@ -102,7 +102,7 @@ export default function MembershipsPage() {
             <div className="text-center space-y-6 max-w-3xl mx-auto mb-20 relative">
                 <div className="absolute inset-0 bg-indigo-500/5 blur-[120px] rounded-full -z-10" />
                 <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.6em]">Premium Memberships</h4>
-                <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter leading-none mb-6">Choose Your Plan.</h1>
+                <h1 className="text-4xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-6">Choose Your Plan.</h1>
                 <p className="text-xl text-slate-500 font-medium leading-relaxed max-w-2xl mx-auto">Select the perfect membership plan to elevate your matchmaking experience.</p>
             </div>
 
@@ -199,7 +199,7 @@ export default function MembershipsPage() {
                         
                         <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] mb-4">Yearly Plan</h3>
                         <div className="flex items-baseline text-white">
-                            <span className="text-7xl font-black tracking-tighter">₹1200</span>
+                            <span className="text-5xl md:text-6xl 2xl:text-7xl font-black tracking-tighter">₹1200</span>
                             <span className="ml-4 text-indigo-300 font-bold uppercase text-xs tracking-widest">/ Year</span>
                         </div>
                         <p className="mt-6 text-slate-400 font-medium leading-relaxed max-w-[240px]">Get the maximum value and uninterrupted premium access for an entire year.</p>
