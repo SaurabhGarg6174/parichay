@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import api, { IMAGE_BASE_URL } from '@/lib/api';
-import { MapPin, Phone, Briefcase, Search, Filter, Megaphone } from 'lucide-react';
+import { MapPin, Phone, User as UserIcon, Search, Megaphone } from 'lucide-react';
 
 export default function BusinessDirectoryPage() {
     const [listings, setListings] = useState<any[]>([]);
@@ -29,127 +29,107 @@ export default function BusinessDirectoryPage() {
     const categories = ['All', ...new Set(listings.map(l => l.category))];
 
     const filteredListings = listings.filter(l => {
-        const matchesSearch = l.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            l.city.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            l.city.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === 'All' || l.category === selectedCategory;
         return matchesSearch && matchesCategory;
     });
 
     if (loading) {
-        return <div className="p-8 flex justify-center items-center h-[50vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-        </div>;
+        return (
+            <div className="flex min-h-[400px] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
+            </div>
+        );
     }
 
-    return (
-        <div className="max-w-7xl mx-auto pb-32 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            {/* Intel Header */}
-            <div className="mb-16 relative">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                    <div className="space-y-4">
-                        <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.5em]">Business Network</h4>
-                        <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">Business Directory</h1>
-                        <p className="text-lg text-slate-500 font-medium max-w-xl">Discover and connect with community businesses and enterprises.</p>
-                    </div>
-                </div>
-            </div>
+    const inputCls = 'w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-[13.5px] text-foreground placeholder:text-faint focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
 
-            {/* Vaulted Tactical Controls */}
-            <div className="mb-12 p-2 bg-slate-900 border border-slate-800/60 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row gap-2 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-bl-[100%] transition-all duration-500 group-hover:bg-indigo-500/10" />
-                <div className="flex-1 relative">
-                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                    <input 
-                        type="text" 
-                        placeholder="Search for businesses..." 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-16 pr-8 py-6 bg-transparent text-white font-bold text-lg placeholder:text-slate-700 outline-none transition-all"
-                    />
+    return (
+        <div className="space-y-5 pb-12">
+            <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                    <h1 className="text-[21px] font-semibold tracking-tight text-foreground">Business directory</h1>
+                    <p className="mt-0.5 text-[13px] text-muted-foreground">Discover and connect with community businesses.</p>
                 </div>
-                <div className="w-px bg-slate-800 hidden md:block" />
-                <div className="md:w-64 relative">
-                    <Filter className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                    <select 
+                <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+                    <div className="relative flex-1 sm:w-72">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" aria-hidden />
+                        <input
+                            type="text"
+                            placeholder="Search by name or city…"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className={`${inputCls} pl-9`}
+                        />
+                    </div>
+                    <select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full pl-16 pr-10 py-6 bg-transparent text-white font-black text-xs uppercase tracking-[0.2em] outline-none appearance-none cursor-pointer"
+                        className={`${inputCls} sm:w-44`}
+                        aria-label="Filter by category"
                     >
-                        {categories.map(cat => <option key={cat} value={cat} className="bg-slate-900 text-white">{cat}</option>)}
+                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                 </div>
-            </div>
+            </header>
 
-            {/* Entity Matrix */}
             {filteredListings.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {filteredListings.map((listing) => (
-                        <div key={listing.id} className="group bg-slate-900 rounded-[2.5rem] border border-slate-800/60 overflow-hidden shadow-xl transition-all duration-700 hover:-translate-y-2 hover:border-indigo-500/40 relative">
-                            <div className="h-44 bg-slate-950 relative overflow-hidden">
+                        <div key={listing.id} className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-card transition-all hover:border-border-strong hover:shadow-lifted">
+                            <div className="relative h-36 bg-surface-muted">
                                 {listing.bannerUrl ? (
-                                    <img src={`${IMAGE_BASE_URL}${listing.bannerUrl}`} alt={listing.name} className="w-full h-full object-cover grayscale opacity-40 transition-all duration-1000 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110" />
+                                    <img src={`${IMAGE_BASE_URL}${listing.bannerUrl}`} alt={listing.name} className="h-full w-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-indigo-500/5 text-slate-800">
-                                        <Megaphone className="w-16 h-16 opacity-20" />
+                                    <div className="flex h-full w-full items-center justify-center">
+                                        <Megaphone className="h-8 w-8 text-faint" aria-hidden />
                                     </div>
                                 )}
-                                <div className="absolute top-4 right-4 px-4 py-1.5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] shadow-2xl">
+                                <span className="absolute right-3 top-3 rounded-full bg-surface px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground shadow-card">
                                     {listing.category}
-                                </div>
+                                </span>
                             </div>
-                            <div className="p-10 relative">
-                                <h3 className="text-2xl font-black text-white mb-6 group-hover:text-indigo-400 transition-colors">{listing.name}</h3>
-                                <div className="space-y-4 mb-10">
-                                    <div className="flex items-center gap-4 text-slate-400">
-                                        <div className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center">
-                                            <MapPin className="w-4 h-4" />
-                                        </div>
-                                        <span className="text-sm font-bold tracking-tight">{listing.city}</span>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-slate-400">
-                                        <div className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center">
-                                            <Briefcase className="w-4 h-4" />
-                                        </div>
-                                        <span className="text-sm font-bold tracking-tight">Contact: {listing.contactPerson}</span>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-emerald-400 pt-2">
-                                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                                            <Phone className="w-4 h-4" />
-                                        </div>
-                                        <span className="text-lg font-black tracking-tighter">{listing.contactNumber}</span>
-                                    </div>
+                            <div className="flex flex-1 flex-col p-4">
+                                <h3 className="text-[15px] font-semibold tracking-tight text-foreground">{listing.name}</h3>
+                                <div className="mt-2.5 space-y-1.5 text-[12.5px] text-muted-foreground">
+                                    <p className="flex items-center gap-2">
+                                        <MapPin className="h-3.5 w-3.5 text-faint" aria-hidden /> {listing.city}
+                                    </p>
+                                    <p className="flex items-center gap-2">
+                                        <UserIcon className="h-3.5 w-3.5 text-faint" aria-hidden /> {listing.contactPerson}
+                                    </p>
                                 </div>
-                                <button className="w-full py-4.5 bg-white text-slate-950 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all hover:bg-indigo-500 hover:text-white active:scale-95 shadow-xl shadow-black/40">
-                                    Contact Now
-                                </button>
+                                <a
+                                    href={`tel:${listing.contactNumber}`}
+                                    className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-[13px] font-semibold text-foreground transition-colors hover:bg-surface-hover tabular-nums"
+                                >
+                                    <Phone className="h-4 w-4 text-success" aria-hidden /> {listing.contactNumber}
+                                </a>
                             </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-32 bg-slate-900 rounded-[3rem] border border-dashed border-slate-800">
-                    <Megaphone className="w-20 h-20 text-slate-800 mx-auto mb-6" />
-                    <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-widest">No Businesses Found</h2>
-                    <p className="text-slate-500 font-medium tracking-tight">Please try adjusting your search or filters.</p>
+                <div className="rounded-xl border border-border bg-surface px-6 py-16 text-center shadow-card">
+                    <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted">
+                        <Megaphone className="h-6 w-6 text-faint" aria-hidden />
+                    </span>
+                    <h2 className="mt-4 text-[15px] font-semibold text-foreground">No businesses found</h2>
+                    <p className="mt-1 text-[13px] text-muted-foreground">Try adjusting your search or category filter.</p>
                 </div>
             )}
-            
-            {/* Elite Integration Module (CTA) */}
-            <div className="mt-24 relative rounded-[4rem] p-16 md:p-24 text-center overflow-hidden bg-white border border-slate-200 dark:bg-slate-950 dark:border-slate-800 shadow-[0_40px_80px_rgba(0,0,0,0.5)]">
-                {/* Visual Depth */}
-                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-[120px] -mr-80 -mt-80" />
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/5 rounded-full blur-[100px] -ml-40 -mb-40" />
-                
-                <div className="relative z-10 max-w-3xl mx-auto space-y-10">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.6em]">Grow With Us</h4>
-                    <h2 className="text-4xl md:text-7xl font-black text-slate-950 dark:text-white tracking-tighter leading-[0.9]">List Your Business.</h2>
-                    <p className="text-xl text-slate-500 font-medium leading-relaxed">Add your business to our directory and reach thousands of community members.</p>
-                    <button className="px-16 py-6 bg-slate-950 dark:bg-white text-white dark:text-slate-950 rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] transition-all hover:scale-105 active:scale-100 shadow-2xl shadow-indigo-500/20">
-                        Add Business
-                    </button>
+
+            {/* Listing CTA */}
+            <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-border bg-surface-muted p-5 sm:flex-row sm:items-center">
+                <div>
+                    <h2 className="text-[15px] font-semibold text-foreground">List your business</h2>
+                    <p className="mt-0.5 text-[13px] text-muted-foreground">Reach thousands of community members through the directory.</p>
                 </div>
+                <button className="shrink-0 rounded-lg bg-primary px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-hover">
+                    Add business
+                </button>
             </div>
         </div>
     );
-
 }

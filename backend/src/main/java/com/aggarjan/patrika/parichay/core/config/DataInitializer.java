@@ -36,8 +36,7 @@ public class DataInitializer {
             });
 
             // Membership Statuses
-            List<String> statuses = List.of("PENDING", "APPROVED", "REJECTED", "ACTIVE", "INACTIVE",
-                    "PAYMENT_VERIFIED");
+            List<String> statuses = List.of("PENDING", "ACTIVE", "INACTIVE");
             statuses.forEach(status -> {
                 if (membershipStatusRepo.findByName(status).isEmpty()) {
                     MembershipStatus ms = new MembershipStatus();
@@ -46,6 +45,18 @@ public class DataInitializer {
                     membershipStatusRepo.save(ms);
                 }
             });
+
+            // Retrieve status entities to obtain their database IDs
+            MembershipStatus pendingStatus = membershipStatusRepo.findByName("PENDING")
+                    .orElseThrow(() -> new IllegalStateException("PENDING status not found"));
+            MembershipStatus activeStatus = membershipStatusRepo.findByName("ACTIVE")
+                    .orElseThrow(() -> new IllegalStateException("ACTIVE status not found"));
+            MembershipStatus inactiveStatus = membershipStatusRepo.findByName("INACTIVE")
+                    .orElseThrow(() -> new IllegalStateException("INACTIVE status not found"));
+
+            Long pendingId = pendingStatus.getId();
+            Long activeId = activeStatus.getId();
+            Long inactiveId = inactiveStatus.getId();
 
             // Metadata Lookups
             Map<String, List<String>> lookupData = Map.of(
@@ -78,16 +89,25 @@ public class DataInitializer {
                 }
             });
 
+            // Clear actions first to prevent old/duplicate records
+            actionRepo.deleteAll();
+
             // Actions for Admin Profiles
             seedProfileAction(actionRepo, "View", "VIEW", "Eye", "text-gray-500", "ADMIN_PROFILES", null, 1);
             
-            // Pending Status (1) Actions
-            seedProfileAction(actionRepo, "Approve", "APPROVE", "Check", "text-emerald-600", "ADMIN_PROFILES", 1L, 2);
-            seedProfileAction(actionRepo, "Reject", "REJECT", "X", "text-rose-600", "ADMIN_PROFILES", 1L, 3);
+            // Pending Status Actions: VIEW, ACTIVATE
+            seedProfileAction(actionRepo, "Activate", "ACTIVATE", "Play", "text-indigo-600", "ADMIN_PROFILES", pendingId, 2);
+
+            // Active Status Actions: VIEW, DEACTIVATE
+            seedProfileAction(actionRepo, "Deactivate", "DEACTIVATE", "X", "text-rose-600", "ADMIN_PROFILES", activeId, 2);
+
+            // Inactive Status Actions: VIEW, REACTIVATE
+            seedProfileAction(actionRepo, "Activate", "REACTIVATE", "Play", "text-indigo-600", "ADMIN_PROFILES", inactiveId, 2);
             
-            // Approved Status (2) Actions
-            seedProfileAction(actionRepo, "Activate", "ACTIVATE", "Play", "text-indigo-600", "ADMIN_PROFILES", 2L, 2);
-            
+            // Seed Actions for User Profiles
+            seedProfileAction(actionRepo, "View Profile", "VIEW_USER", "User", "text-indigo-600", "USER_PROFILES", null, 1);
+            seedProfileAction(actionRepo, "Shortlist", "SHORTLIST", "Heart", "text-rose-500", "USER_PROFILES", null, 2);
+
             // Admin Users (for full table, not status specific)
             seedProfileAction(actionRepo, "Edit", "EDIT", "Pencil", "text-indigo-600", "ADMIN_USERS", null, 1);
             seedProfileAction(actionRepo, "Delete", "DELETE", "Trash", "text-rose-600", "ADMIN_USERS", null, 2);

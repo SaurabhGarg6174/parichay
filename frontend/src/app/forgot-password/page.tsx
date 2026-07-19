@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import AuthCard from '@/components/AuthCard';
+
+const inputCls = 'w-full rounded-lg border border-border-strong bg-surface px-3 py-2.5 text-[13.5px] text-foreground placeholder:text-faint focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState('');
@@ -26,60 +29,57 @@ export default function ForgotPassword() {
     };
 
     return (
-        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4 md:p-8 bg-gray-50/50 dark:bg-transparent">
-            <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl shadow-xl p-6 md:p-10 border border-gray-100 dark:border-slate-800">
-                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent text-center mb-3">
-                    Forgot Password
-                </h2>
-
-                {submitted ? (
-                    <>
-                        <p className="text-sm text-center text-gray-600 dark:text-gray-400 mb-6">
-                            If an account exists for <span className="font-medium text-gray-900 dark:text-gray-200">{email}</span>, a password reset link has been sent to it.
-                        </p>
-                        <Link
-                            href="/login"
-                            className="block w-full text-center bg-indigo-600 dark:bg-indigo-500 text-white font-medium py-3 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
-                        >
-                            Back to Login
-                        </Link>
-                    </>
-                ) : (
-                    <>
-                        <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-8">
-                            Enter the email linked to your account and we&apos;ll send you a link to reset your password.
-                        </p>
-                        {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30 mb-4">{error}</p>}
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-colors"
-                                    placeholder="hello@example.com"
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-indigo-600 dark:bg-indigo-500 text-white font-medium py-3 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
-                            >
-                                {loading ? 'Sending...' : 'Send Reset Link'}
-                            </button>
-                        </form>
-                    </>
-                )}
-
-                <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                    Remembered your password?{' '}
-                    <Link href="/login" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
-                        Login here
+        <AuthCard
+            title="Forgot password"
+            subtitle={submitted ? undefined : "Enter your account email and we'll send you a reset link."}
+        >
+            {submitted ? (
+                <>
+                    <p className="rounded-lg border border-success/40 bg-success-subtle px-3.5 py-3 text-[13px] text-foreground">
+                        If an account exists for <span className="font-semibold">{email}</span>, a password reset link has been sent to it.
+                    </p>
+                    <Link
+                        href="/login"
+                        className="mt-4 block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                    >
+                        Back to sign in
                     </Link>
-                </p>
-            </div>
-        </div>
+                </>
+            ) : (
+                <>
+                    {error && (
+                        <p className="mb-4 rounded-lg border border-danger/30 bg-danger-subtle px-3.5 py-2.5 text-[13px] text-danger">
+                            {error}
+                        </p>
+                    )}
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-1.5">
+                            <label htmlFor="email" className="block text-[12.5px] font-semibold text-foreground">Email address</label>
+                            <input
+                                id="email"
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className={inputCls}
+                                placeholder="name@example.com"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {loading ? 'Sending…' : 'Send reset link'}
+                        </button>
+                    </form>
+                </>
+            )}
+
+            <p className="mt-5 text-center text-[13px] text-muted-foreground">
+                Remembered your password?{' '}
+                <Link href="/login" className="font-semibold text-primary hover:underline">Sign in</Link>
+            </p>
+        </AuthCard>
     );
 }

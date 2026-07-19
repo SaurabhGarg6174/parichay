@@ -3,7 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
-import { CheckCircle, Clock, XCircle, CreditCard, AlertCircle } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, CreditCard, AlertCircle, Circle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ActivationStatusPage() {
@@ -32,67 +32,96 @@ export default function ActivationStatusPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+            <div className="flex min-h-[400px] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
             </div>
         );
     }
 
     const statusName = profile?.membershipStatus?.name || 'NOT_SUBMITTED';
 
+    const statusView = {
+        ACTIVE: {
+            icon: <CheckCircle className="h-6 w-6 text-success" aria-hidden />, iconBg: 'bg-success-subtle',
+            badge: 'bg-success-subtle text-success', badgeLabel: 'Active',
+            title: 'Profile is fully active',
+            message: 'You can fully interact with matches and view contact details.',
+        },
+        PENDING: {
+            icon: <CreditCard className="h-6 w-6 text-info" aria-hidden />, iconBg: 'bg-info-subtle',
+            badge: 'bg-info-subtle text-info', badgeLabel: 'Payment pending',
+            title: 'Bio-data submitted — payment pending',
+            message: 'Complete your membership subscription to activate your profile and unlock matchmaking.',
+        },
+        INACTIVE: {
+            icon: <XCircle className="h-6 w-6 text-danger" aria-hidden />, iconBg: 'bg-danger-subtle',
+            badge: 'bg-danger-subtle text-danger', badgeLabel: 'Inactive',
+            title: 'Profile is inactive',
+            message: 'Your profile has been deactivated by the administrator. Contact support for help.',
+        },
+        NOT_SUBMITTED: {
+            icon: <AlertCircle className="h-6 w-6 text-faint" aria-hidden />, iconBg: 'bg-surface-muted',
+            badge: 'bg-surface-muted text-muted-foreground', badgeLabel: 'Not submitted',
+            title: 'Bio-data not submitted',
+            message: 'Submit your complete bio-data to start the activation process.',
+        },
+    }[statusName as string] ?? {
+        icon: <AlertCircle className="h-6 w-6 text-faint" aria-hidden />, iconBg: 'bg-surface-muted',
+        badge: 'bg-surface-muted text-muted-foreground', badgeLabel: statusName,
+        title: 'Profile status', message: '',
+    };
+
+    const steps = [
+        {
+            title: 'Complete bio-data',
+            description: 'Fill out your personal, professional and family details.',
+            done: statusName !== 'NOT_SUBMITTED',
+            failed: false,
+        },
+        {
+            title: 'Platform membership',
+            description: 'Activate a membership to unlock contact details and search matches.',
+            done: statusName === 'ACTIVE',
+            failed: statusName === 'INACTIVE',
+        },
+    ];
+
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-            <header>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Activation Status</h1>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">Track the activation journey of your profile</p>
+        <div className="mx-auto max-w-3xl space-y-4">
+            <header className="mb-6">
+                <p className="text-xs text-faint">Payments / <span className="font-medium text-muted-foreground">Activation Status</span></p>
+                <h1 className="mt-1 text-[21px] font-semibold tracking-tight text-foreground">Activation status</h1>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">Track how close your profile is to going live.</p>
             </header>
 
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
-                <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
-                    
-                    {/* Status Icon Indicator */}
-                    <div className="shrink-0 flex items-center justify-center w-24 h-24 rounded-full border-4 border-white dark:border-slate-800 shadow-lg bg-gray-50 dark:bg-slate-800/50">
-                        {statusName === 'ACTIVE' && <CheckCircle className="w-12 h-12 text-emerald-500" />}
-                        {statusName === 'APPROVED' && <CreditCard className="w-12 h-12 text-indigo-500" />}
-                        {statusName === 'PENDING' && <Clock className="w-12 h-12 text-amber-500" />}
-                        {statusName === 'REJECTED' && <XCircle className="w-12 h-12 text-rose-500" />}
-                        {statusName === 'NOT_SUBMITTED' && <AlertCircle className="w-12 h-12 text-gray-400" />}
-                    </div>
-
-                    <div className="flex-1 space-y-4">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                {statusName === 'ACTIVE' ? 'Profile is Fully Active' :
-                                 statusName === 'APPROVED' ? 'Profile Approved - Payment Pending' :
-                                 statusName === 'PENDING' ? 'Profile Under Review' :
-                                 statusName === 'REJECTED' ? 'Profile Needs Revision' :
-                                 'Bio-Data Not Submitted'}
-                            </h2>
-                            <p className="text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
-                                {statusName === 'ACTIVE' ? 'Congratulations! You can fully interact with matches and messages.' :
-                                 statusName === 'APPROVED' ? 'Your bio-data looks great. Just complete your membership fee to turn your profile active.' :
-                                 statusName === 'PENDING' ? 'Our administrative team is actively reviewing your bio-data to maintain community safety. This can take 24-48 hours.' :
-                                 statusName === 'REJECTED' ? 'Unfortunately your profile submission was rejected. Review our guidelines and try submitting again.' :
-                                 'To start finding your matches, you must accurately submit your complete bio-data first.'}
-                            </p>
+            {/* Status card */}
+            <div className="rounded-xl border border-border bg-surface p-5 shadow-card">
+                <div className="flex items-start gap-4">
+                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${statusView.iconBg}`}>
+                        {statusView.icon}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h2 className="text-[15px] font-semibold text-foreground">{statusView.title}</h2>
+                            <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${statusView.badge}`}>
+                                {statusView.badgeLabel}
+                            </span>
                         </div>
-                        
-                        <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                            {statusName === 'NOT_SUBMITTED' && (
-                                <Link href="/dashboard/profile" className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-soft transition-colors text-center">
-                                    Create Bio-Data
+                        <p className="mt-1 text-[13px] text-muted-foreground">{statusView.message}</p>
+
+                        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                            {statusName === 'NOT_SUBMITTED' ? (
+                                <Link href="/dashboard/profile" className="rounded-lg bg-primary px-3.5 py-2 text-center text-[13px] font-semibold text-white transition-colors hover:bg-primary-hover">
+                                    Create bio-data
+                                </Link>
+                            ) : (
+                                <Link href="/dashboard/profile" className="rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-center text-[13px] font-semibold text-foreground transition-colors hover:bg-surface-hover">
+                                    View full profile
                                 </Link>
                             )}
-                            
-                            {(statusName === 'PENDING' || statusName === 'REJECTED' || statusName === 'ACTIVE' || statusName === 'APPROVED') && (
-                                <Link href="/dashboard/profile" className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-900 dark:text-white rounded-xl text-sm font-bold shadow-soft transition-colors text-center inline-flex items-center justify-center">
-                                    View Full Profile
-                                </Link>
-                            )}
-                            
-                            {(statusName === 'APPROVED' || statusName === 'PENDING') && (
-                                <Link href="/dashboard/payment/memberships" className="px-6 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl text-sm font-bold transition-all shadow-md shadow-indigo-200 dark:shadow-none text-center inline-flex items-center justify-center gap-2">
-                                    <CreditCard className="w-4 h-4" /> View Plans & Pay
+                             {statusName === 'PENDING' && (
+                                <Link href="/dashboard/payment/memberships" className="flex items-center justify-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-hover">
+                                    <CreditCard className="h-4 w-4" aria-hidden /> View plans &amp; pay
                                 </Link>
                             )}
                         </div>
@@ -100,49 +129,36 @@ export default function ActivationStatusPage() {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Activation Checklist</h3>
-                
-                <div className="space-y-6">
-                    <div className="flex gap-4 items-start">
-                        <div className={`mt-0.5 shrink-0 ${statusName !== 'NOT_SUBMITTED' ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'}`}>
-                            <CheckCircle className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className={`font-semibold ${statusName !== 'NOT_SUBMITTED' ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>Complete Bio-Data</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Fill out your personal, professional, and family details comprehensively.</p>
-                        </div>
-                    </div>
-
-                    <div className="flex gap-4 items-start relative">
-                        {/* Connecting Line */}
-                        <div className={`absolute top-0 bottom-full -mt-4 left-3 w-px -ml-px ${['APPROVED', 'ACTIVE'].includes(statusName) ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-slate-700'}`}></div>
-                        
-                        <div className={`mt-0.5 shrink-0 relative z-10 bg-white dark:bg-slate-900 ${['APPROVED', 'ACTIVE'].includes(statusName) ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'}`}>
-                            {statusName === 'REJECTED' ? <XCircle className="w-6 h-6 text-rose-500" /> : <CheckCircle className="w-6 h-6" />}
-                        </div>
-                        <div>
-                            <p className={`font-semibold ${['APPROVED', 'ACTIVE'].includes(statusName) ? 'text-gray-900 dark:text-white' : statusName === 'REJECTED' ? 'text-rose-600' : 'text-gray-400 dark:text-gray-500'}`}>Admin Approval</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Our administrators will review your profile for safety and genuineness.</p>
-                        </div>
-                    </div>
-
-                    <div className="flex gap-4 items-start relative">
-                         {/* Connecting Line */}
-                         <div className={`absolute top-0 bottom-full -mt-4 left-3 w-px -ml-px ${statusName === 'ACTIVE' ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-slate-700'}`}></div>
-
-                        <div className={`mt-0.5 shrink-0 relative z-10 bg-white dark:bg-slate-900 ${statusName === 'ACTIVE' ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'}`}>
-                            <CheckCircle className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className={`font-semibold ${statusName === 'ACTIVE' ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>Platform Membership</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Secure your account by activating a standard platform membership.</p>
-                        </div>
-                    </div>
+            {/* Checklist */}
+            <div className="rounded-xl border border-border bg-surface shadow-card">
+                <div className="border-b border-border px-5 py-3.5">
+                    <h3 className="text-sm font-semibold text-foreground">Activation checklist</h3>
                 </div>
-
+                <div className="px-5 py-4">
+                    {steps.map((step, i) => (
+                        <div key={step.title} className="relative flex gap-3.5 pb-5 last:pb-0">
+                            {i < steps.length - 1 && (
+                                <span className={`absolute left-[9px] top-6 bottom-0 w-px ${step.done ? 'bg-success' : 'bg-border'}`} aria-hidden />
+                            )}
+                            <span className="relative z-10 mt-0.5 shrink-0 bg-surface">
+                                {step.failed ? (
+                                    <XCircle className="h-[18px] w-[18px] text-danger" aria-hidden />
+                                ) : step.done ? (
+                                    <CheckCircle className="h-[18px] w-[18px] text-success" aria-hidden />
+                                ) : (
+                                    <Circle className="h-[18px] w-[18px] text-border-strong" aria-hidden />
+                                )}
+                            </span>
+                            <div>
+                                <p className={`text-[13.5px] font-semibold ${step.failed ? 'text-danger' : step.done ? 'text-foreground' : 'text-faint'}`}>
+                                    {step.title}
+                                </p>
+                                <p className="mt-0.5 text-[12.5px] text-muted-foreground">{step.description}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-
         </div>
     );
 }

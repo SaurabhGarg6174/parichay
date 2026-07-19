@@ -23,8 +23,8 @@ export default function Home() {
   }, [user, loading, router]);
 
   return (
-    <div className="h-[80vh] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+    <div className="flex h-[80vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
     </div>
   );
 }

@@ -36,52 +36,49 @@ export default function SuccessStories() {
     if (loading || stories.length === 0) return null;
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 p-8 mb-8">
-            <div className="flex items-center gap-3 mb-10">
-                <div className="p-3 bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl">
-                    <Heart className="w-6 h-6 fill-current" />
-                </div>
+        <div className="rounded-xl border border-border bg-surface shadow-card">
+            <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5">
+                <Heart className="h-4 w-4 text-primary" aria-hidden />
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Community Success Stories</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Celebrating the unions formed through Parichay</p>
+                    <h2 className="text-sm font-semibold text-foreground">Success stories</h2>
                 </div>
+                <p className="ml-auto text-[12px] text-faint">Unions formed through Parichay</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
                 {stories.map((story) => (
-                    <div key={story.id} className="group relative bg-gray-50/50 dark:bg-slate-800/30 rounded-[2rem] p-6 border border-gray-100 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 transition-all duration-500 hover:shadow-2xl hover:shadow-rose-500/10 hover:-translate-y-1">
-                        <div className="relative h-48 mb-6 rounded-2xl overflow-hidden shadow-lg transform group-hover:scale-[1.02] transition-transform duration-500">
+                    <div key={story.id} className="overflow-hidden rounded-[10px] border border-border bg-surface transition-all hover:border-border-strong hover:shadow-lifted">
+                        <div className="relative h-40">
                             {story.photoUrl ? (
-                                <img 
-                                    src={`${IMAGE_BASE_URL}${story.photoUrl}`} 
-                                    alt={`${story.groomName} & ${story.brideName}`} 
-                                    className="w-full h-full object-cover"
+                                <img
+                                    src={`${IMAGE_BASE_URL}${story.photoUrl}`}
+                                    alt={`${story.groomName} & ${story.brideName}`}
+                                    className="h-full w-full object-cover"
                                 />
                             ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-rose-100 to-indigo-100 dark:from-rose-900/20 dark:to-indigo-900/20 flex items-center justify-center">
-                                    <Heart className="w-12 h-12 text-rose-300 dark:text-rose-700" />
+                                <div className="flex h-full w-full items-center justify-center bg-surface-muted">
+                                    <Heart className="h-8 w-8 text-faint" aria-hidden />
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-bottom p-4">
-                                <p className="mt-auto text-white font-bold text-lg">{story.groomName} & {story.brideName}</p>
+                            <div className="absolute inset-0 flex bg-gradient-to-t from-black/60 to-transparent p-3">
+                                <p className="mt-auto text-[14px] font-semibold text-white">{story.groomName} &amp; {story.brideName}</p>
                             </div>
                         </div>
 
-                        <div className="relative">
-                            <Quote className="absolute -top-2 -left-2 w-8 h-8 text-rose-200 dark:text-rose-900/30 -z-10" />
-                            <p className="text-sm text-gray-600 dark:text-gray-300 italic mb-4 line-clamp-3 leading-relaxed">
-                                "{story.story}"
+                        <div className="p-4">
+                            <p className="line-clamp-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                                <Quote className="mr-1 inline h-3 w-3 text-faint" aria-hidden />
+                                {story.story}
                             </p>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-slate-700/50">
-                            <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {new Date(story.weddingDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                            <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                                <span className="flex items-center gap-1.5 text-[11.5px] text-faint">
+                                    <Calendar className="h-3 w-3" aria-hidden />
+                                    {new Date(story.weddingDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                                </span>
+                                <span className="rounded-full bg-success-subtle px-2 py-0.5 text-[10.5px] font-semibold text-success">
+                                    Verified match
+                                </span>
                             </div>
-                            <span className="text-[10px] font-bold bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-2.5 py-1 rounded-full border border-rose-100 dark:border-rose-800/50">
-                                Match Verified
-                            </span>
                         </div>
                     </div>
                 ))}

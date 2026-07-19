@@ -5,6 +5,10 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
+import AuthCard from '@/components/AuthCard';
+
+const inputCls = 'w-full rounded-lg border border-border-strong bg-surface px-3 py-2.5 text-[13.5px] text-foreground placeholder:text-faint focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
+const labelCls = 'block text-[12.5px] font-semibold text-foreground';
 
 function ResetPasswordForm() {
     const searchParams = useSearchParams();
@@ -42,12 +46,12 @@ function ResetPasswordForm() {
     if (!token) {
         return (
             <>
-                <p className="text-sm text-center text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30 mb-6">
+                <p className="rounded-lg border border-danger/30 bg-danger-subtle px-3.5 py-3 text-[13px] text-danger">
                     This reset link is missing its token. Please request a new one.
                 </p>
                 <Link
                     href="/forgot-password"
-                    className="block w-full text-center bg-indigo-600 dark:bg-indigo-500 text-white font-medium py-3 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+                    className="mt-4 block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
                 >
                     Request a new link
                 </Link>
@@ -57,60 +61,63 @@ function ResetPasswordForm() {
 
     if (success) {
         return (
-            <p className="text-sm text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                Password reset successfully. Redirecting you to login&hellip;
+            <p className="rounded-lg border border-success/40 bg-success-subtle px-3.5 py-3 text-[13px] text-foreground">
+                Password reset successfully. Redirecting you to sign in&hellip;
             </p>
         );
     }
 
     return (
         <>
-            <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-8">
-                Choose a new password for your account.
-            </p>
-            {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30 mb-4">{error}</p>}
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
+            {error && (
+                <p className="mb-4 rounded-lg border border-danger/30 bg-danger-subtle px-3.5 py-2.5 text-[13px] text-danger">
+                    {error}
+                </p>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                    <label htmlFor="new-password" className={labelCls}>New password</label>
                     <div className="relative">
                         <input
+                            id="new-password"
                             type={showPassword ? 'text' : 'password'}
                             required
                             minLength={6}
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-colors"
-                            placeholder="••••••••"
+                            className={`${inputCls} pr-11`}
+                            placeholder="At least 6 characters"
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(prev => !prev)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-500 transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-faint transition-colors hover:text-foreground"
                             tabIndex={-1}
                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
-                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
                         </button>
                     </div>
                 </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
+                <div className="space-y-1.5">
+                    <label htmlFor="confirm-password" className={labelCls}>Confirm new password</label>
                     <input
+                        id="confirm-password"
                         type={showPassword ? 'text' : 'password'}
                         required
                         minLength={6}
                         value={confirmationPassword}
                         onChange={(e) => setConfirmationPassword(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-colors"
-                        placeholder="••••••••"
+                        className={inputCls}
+                        placeholder="Repeat the new password"
                     />
                 </div>
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-indigo-600 dark:bg-indigo-500 text-white font-medium py-3 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+                    className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    {loading ? 'Resetting...' : 'Reset Password'}
+                    {loading ? 'Resetting…' : 'Reset password'}
                 </button>
             </form>
         </>
@@ -119,15 +126,10 @@ function ResetPasswordForm() {
 
 export default function ResetPassword() {
     return (
-        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4 md:p-8 bg-gray-50/50 dark:bg-transparent">
-            <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl shadow-xl p-6 md:p-10 border border-gray-100 dark:border-slate-800">
-                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent text-center mb-3">
-                    Reset Password
-                </h2>
-                <Suspense fallback={<p className="text-sm text-center text-gray-500 dark:text-gray-400">Loading&hellip;</p>}>
-                    <ResetPasswordForm />
-                </Suspense>
-            </div>
-        </div>
+        <AuthCard title="Reset password" subtitle="Choose a new password for your account.">
+            <Suspense fallback={<p className="text-center text-[13px] text-muted-foreground">Loading&hellip;</p>}>
+                <ResetPasswordForm />
+            </Suspense>
+        </AuthCard>
     );
 }

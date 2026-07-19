@@ -12,7 +12,9 @@ import {
     ArrowRight,
     UserCircle,
     Heart,
-    Bell
+    Bell,
+    CreditCard,
+    Search,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -73,27 +75,48 @@ export default function Dashboard() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+            <div className="flex min-h-[400px] items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
             </div>
         );
     }
 
+    const greeting = (() => {
+        const h = new Date().getHours();
+        if (h < 12) return 'Good morning';
+        if (h < 17) return 'Good afternoon';
+        return 'Good evening';
+    })();
+
+    const firstName = memberProfile?.fullName?.split(' ')[0] || user?.email.split('@')[0];
+
     return (
-        <div className="space-y-12 md:space-y-16">
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-200 dark:border-slate-800/60">
+        <div className="space-y-6">
+            <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-3">Dashboard Overview</p>
-                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
-                        {isAdmin ? 'Admin Dashboard' : 'My Dashboard'}
+                    <h1 className="text-[21px] font-semibold tracking-tight text-foreground">
+                        {isAdmin ? 'Admin dashboard' : `${greeting}, ${firstName}`}
                     </h1>
+                    <p className="mt-0.5 text-[13px] text-muted-foreground">
+                        {isAdmin ? 'Platform overview and moderation queue.' : "Here's where your profile stands today."}
+                    </p>
                 </div>
-                <div className="flex flex-1 max-w-[280px] items-center gap-4 px-6 py-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400 flex-1 min-w-0 truncate">
-                        Identity: <span className="text-slate-900 dark:text-slate-100">{user?.email.split('@')[0]}</span>
-                    </span>
-                </div>
+                {!isAdmin && (
+                    <div className="flex shrink-0 gap-2">
+                        <Link
+                            href="/dashboard/profile"
+                            className="rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-[13px] font-semibold text-foreground transition-colors hover:bg-surface-hover"
+                        >
+                            {memberProfile ? 'Edit bio-data' : 'Create bio-data'}
+                        </Link>
+                        <Link
+                            href="/dashboard/matches"
+                            className="rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-hover"
+                        >
+                            Browse matches
+                        </Link>
+                    </div>
+                )}
             </header>
 
             {isAdmin ? (
@@ -107,73 +130,73 @@ export default function Dashboard() {
 
 function AdminDashboardView({ stats }: { stats: AdminStats | null }) {
     const statCards = [
-        { label: 'Pending Review', count: stats?.PENDING || 0, icon: Clock, color: 'text-amber-500', glow: 'shadow-amber-500/10' },
-        { label: 'Approved Profiles', count: stats?.APPROVED || 0, icon: CheckCircle, color: 'text-emerald-500', glow: 'shadow-emerald-500/10' },
-        { label: 'Active Members', count: stats?.ACTIVE || 0, icon: Users, color: 'text-indigo-500', glow: 'shadow-indigo-500/10' },
-        { label: 'Rejected Profiles', count: stats?.REJECTED || 0, icon: XCircle, color: 'text-rose-500', glow: 'shadow-rose-500/10' },
+        { label: 'Pending review', count: stats?.PENDING || 0, icon: Clock, color: 'text-warning' },
+        { label: 'Approved profiles', count: stats?.APPROVED || 0, icon: CheckCircle, color: 'text-success' },
+        { label: 'Active members', count: stats?.ACTIVE || 0, icon: Users, color: 'text-info' },
+        { label: 'Rejected profiles', count: stats?.REJECTED || 0, icon: XCircle, color: 'text-danger' },
     ];
 
     return (
-        <div className="space-y-16 animate-in fade-in duration-1000">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statCards.map((stat, i) => (
-                    <div key={i} className={`group bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-lg ${stat.glow} hover:-translate-y-2 transition-all duration-500`}>
-                        <div className="flex flex-col gap-6">
-                            <div className="flex items-center justify-between">
-                                <div className={`p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl group-hover:rotate-12 transition-transform duration-500`}>
-                                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                                </div>
-                                <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{stat.count}</span>
-                            </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</p>
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {statCards.map((stat) => (
+                    <div key={stat.label} className="rounded-xl border border-border bg-surface p-4 shadow-card">
+                        <div className="flex items-center justify-between">
+                            <p className="text-[11.5px] font-semibold uppercase tracking-[0.05em] text-faint">{stat.label}</p>
+                            <stat.icon className={`h-4 w-4 ${stat.color}`} aria-hidden />
                         </div>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground tabular-nums">{stat.count}</p>
                     </div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                <div className="lg:col-span-2 space-y-8">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-widest pl-4 border-l-4 border-indigo-600">Quick Actions</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Link href="/dashboard/admin/profiles?status=pending" className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-800 hover:border-amber-500/30 transition-all duration-500 flex flex-col gap-6">
-                            <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center">
-                                <FileText className="w-6 h-6 text-amber-500" />
-                            </div>
-                            <div>
-                                <h4 className="text-xl font-black text-white mb-2">Review Pipeline</h4>
-                                <p className="text-sm text-slate-400 leading-relaxed">Review and approve pending member bio-data submissions.</p>
-                            </div>
-                            <div className="mt-auto pt-6 flex items-center gap-2 text-amber-500 font-black text-[10px] uppercase tracking-widest">
-                                Open Pipeline <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                            </div>
-                        </Link>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-2">
+                    <Link
+                        href="/dashboard/admin/profiles?status=pending"
+                        className="group rounded-xl border border-border bg-surface p-5 shadow-card transition-shadow hover:border-border-strong hover:shadow-lifted"
+                    >
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning-subtle">
+                            <FileText className="h-4.5 w-4.5 text-warning" aria-hidden />
+                        </span>
+                        <h3 className="mt-4 text-[15px] font-semibold text-foreground">Review pipeline</h3>
+                        <p className="mt-1 text-[13px] text-muted-foreground">Review and approve pending member bio-data submissions.</p>
+                        <span className="mt-4 flex items-center gap-1.5 text-[12.5px] font-semibold text-primary">
+                            Open pipeline <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                        </span>
+                    </Link>
 
-                        <Link href="/dashboard/admin/users" className="group p-8 rounded-[2.5rem] bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-800 hover:border-indigo-500/30 transition-all duration-500 flex flex-col gap-6">
-                            <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center">
-                                <Users className="w-6 h-6 text-indigo-500" />
-                            </div>
-                            <div>
-                                <h4 className="text-xl font-black text-white mb-2">Manage Users</h4>
-                                <p className="text-sm text-slate-400 leading-relaxed">Manage system users, permissions, and roles.</p>
-                            </div>
-                            <div className="mt-auto pt-6 flex items-center gap-2 text-indigo-500 font-black text-[10px] uppercase tracking-widest">
-                                Open Users <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                            </div>
-                        </Link>
-                    </div>
+                    <Link
+                        href="/dashboard/admin/users"
+                        className="group rounded-xl border border-border bg-surface p-5 shadow-card transition-shadow hover:border-border-strong hover:shadow-lifted"
+                    >
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-info-subtle">
+                            <Users className="h-4.5 w-4.5 text-info" aria-hidden />
+                        </span>
+                        <h3 className="mt-4 text-[15px] font-semibold text-foreground">Manage users</h3>
+                        <p className="mt-1 text-[13px] text-muted-foreground">Manage system users, permissions, and roles.</p>
+                        <span className="mt-4 flex items-center gap-1.5 text-[12.5px] font-semibold text-primary">
+                            Open users <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                        </span>
+                    </Link>
                 </div>
 
-                <div className="space-y-8">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-widest pl-4 border-l-4 border-emerald-500">System Status</h3>
-                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 space-y-6 shadow-xl">
+                <div className="rounded-xl border border-border bg-surface shadow-card">
+                    <div className="border-b border-border px-5 py-3.5">
+                        <h3 className="text-sm font-semibold text-foreground">System status</h3>
+                    </div>
+                    <div className="px-5 py-2">
                         {[
-                            { label: 'API Server', status: 'SYNCHRONIZED', color: 'text-emerald-500' },
-                            { label: 'Database', status: 'ACTIVE', color: 'text-emerald-500' },
-                            { label: 'File Storage', status: 'LATENCY LOW', color: 'text-indigo-400' }
-                        ].map((node, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{node.label}</span>
-                                <span className={`text-[10px] font-black ${node.color} uppercase tracking-widest`}>{node.status}</span>
+                            { label: 'API server', status: 'Operational' },
+                            { label: 'Database', status: 'Operational' },
+                            { label: 'File storage', status: 'Operational' },
+                        ].map((node) => (
+                            <div key={node.label} className="flex items-center justify-between border-b border-border py-2.5 text-[13px] last:border-b-0">
+                                <span className="text-muted-foreground">{node.label}</span>
+                                <span className="flex items-center gap-1.5 font-medium text-success">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                                    {node.status}
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -185,110 +208,136 @@ function AdminDashboardView({ stats }: { stats: AdminStats | null }) {
 
 function MemberDashboardView({ profile }: { profile: MemberProfile | null }) {
     const status = profile?.membershipStatus?.name || 'NOT_SUBMITTED';
-    const isProfileComplete = !!profile;
 
     const getStatusInfo = (status: string) => {
         switch (status) {
-            case 'ACTIVE': return { color: 'text-emerald-500', bg: 'bg-emerald-500/10', label: 'Authorized', icon: CheckCircle };
-            case 'PENDING': return { color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Reviewing', icon: Clock };
-            case 'REJECTED': return { color: 'text-rose-500', bg: 'bg-rose-500/10', label: 'Attention Required', icon: XCircle };
-            default: return { color: 'text-slate-400', bg: 'bg-slate-500/10', label: 'Incomplete', icon: UserCircle };
+            case 'ACTIVE': return {
+                badge: 'bg-success-subtle text-success', label: 'Verified & active', icon: CheckCircle, iconColor: 'text-success',
+                message: 'Your profile is verified and visible to matches.',
+            };
+            case 'PENDING': return {
+                badge: 'bg-warning-subtle text-warning', label: 'Pending activation', icon: Clock, iconColor: 'text-warning',
+                message: 'Activate your membership to unlock matches and search features.',
+            };
+            case 'INACTIVE': return {
+                badge: 'bg-danger-subtle text-danger', label: 'Inactive', icon: XCircle, iconColor: 'text-danger',
+                message: 'Your profile has been deactivated by the administrator.',
+            };
+            default: return {
+                badge: 'bg-surface-muted text-muted-foreground', label: 'Not submitted', icon: UserCircle, iconColor: 'text-faint',
+                message: 'Create your bio-data to start the membership process.',
+            };
         }
     };
 
     const statusInfo = getStatusInfo(status);
 
-    return (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div className="relative p-12 md:p-16 rounded-[3rem] bg-slate-900 overflow-hidden shadow-2xl">
-                {/* Modern Mesh Gradient Background */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] -mr-40 -mt-40 animate-pulse" />
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[100px] -ml-20 -mb-20" />
+    const quickActions = [
+        { href: '/dashboard/profile', icon: FileText, label: profile ? 'Update bio-data' : 'Create bio-data' },
+        { href: '/dashboard/matches', icon: Search, label: 'Search matches' },
+        { href: '/dashboard/matches?tab=shortlisted', icon: Heart, label: 'View shortlist' },
+        { href: '/dashboard/payment/memberships', icon: CreditCard, label: 'Manage membership' },
+    ];
 
-                <div className="relative z-10 grid lg:grid-cols-2 lg:items-center gap-12">
-                    <div className="space-y-8">
-                        <div>
-                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-4">Matchmaking Portal</p>
-                            <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none mb-6">
-                                Welcome, <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-200">
-                                    {profile?.fullName || 'Distinguished Member'}
+    return (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="space-y-4 lg:col-span-2">
+                {/* Profile status */}
+                <div className="rounded-xl border border-border bg-surface p-5 shadow-card">
+                    <div className="flex items-start gap-4">
+                        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${statusInfo.badge.split(' ')[0]}`}>
+                            <statusInfo.icon className={`h-5 w-5 ${statusInfo.iconColor}`} aria-hidden />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-[15px] font-semibold text-foreground">Profile status</h3>
+                                <span className={`rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${statusInfo.badge}`}>
+                                    {statusInfo.label}
                                 </span>
-                            </h2>
-                            <p className="text-lg text-slate-300 leading-relaxed max-w-md">Your future meaningful connection begins here. Maintain your bio-data for optimal platform visibility.</p>
+                            </div>
+                            <p className="mt-1 text-[13px] text-muted-foreground">{statusInfo.message}</p>
                         </div>
-                        <div className="flex flex-wrap gap-4">
-                            <Link href="/dashboard/profile" className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">
-                                {isProfileComplete ? 'Modify Bio-Data' : 'Initialize Profile'}
+                        {status === 'NOT_SUBMITTED' && (
+                            <Link
+                                href="/dashboard/profile"
+                                className="shrink-0 rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-hover"
+                            >
+                                Get started
                             </Link>
-                            <Link href="/dashboard/matches" className="px-8 py-4 bg-slate-800 text-white border border-slate-700/50 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition-all hover:scale-105 active:scale-95 shadow-xl">
-                                Explore Network
+                        )}
+                        {status === 'PENDING' && (
+                            <Link
+                                href="/dashboard/payment/memberships"
+                                className="shrink-0 rounded-lg bg-primary px-3.5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-hover"
+                            >
+                                Activate membership
                             </Link>
-                        </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Shortlist */}
+                <div className="rounded-xl border border-border bg-surface shadow-card">
+                    <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+                        <h3 className="text-sm font-semibold text-foreground">Your shortlist</h3>
+                        <Link href="/dashboard/matches?tab=shortlisted" className="text-[12.5px] font-semibold text-primary hover:underline">
+                            View all
+                        </Link>
+                    </div>
+                    <div className="flex items-center gap-3 px-5 py-4">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-subtle">
+                            <Heart className="h-4.5 w-4.5 text-primary" aria-hidden />
+                        </span>
+                        <p className="text-[13px] text-muted-foreground">
+                            Profiles you shortlist while browsing matches appear here for quick comparison.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Quick actions */}
+                <div className="rounded-xl border border-border bg-surface shadow-card">
+                    <div className="border-b border-border px-5 py-3.5">
+                        <h3 className="text-sm font-semibold text-foreground">Quick actions</h3>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">
+                        {quickActions.map((action) => (
+                            <Link
+                                key={action.label}
+                                href={action.href}
+                                className="flex items-center gap-2.5 rounded-lg border border-border px-3.5 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:border-border-strong hover:bg-surface-hover"
+                            >
+                                <action.icon className="h-4 w-4 text-muted-foreground" aria-hidden />
+                                {action.label}
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/60 shadow-lg group hover:-translate-y-2 transition-all duration-500">
-                        <div className="flex flex-col gap-8">
-                            <div className="flex items-center gap-6">
-                                <div className={`${statusInfo.bg} p-5 rounded-2xl`}>
-                                    <statusInfo.icon className={`w-8 h-8 ${statusInfo.color}`} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Profile Status</p>
-                                    <h3 className={`text-xl font-black uppercase tracking-tighter ${statusInfo.color}`}>{statusInfo.label}</h3>
-                                </div>
-                            </div>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                                {status === 'PENDING' ? 'Your profile is under review and will be verified shortly.' :
-                                    status === 'ACTIVE' ? 'Your profile is verified and active.' :
-                                        status === 'REJECTED' ? 'Your profile needs attention. Please update your bio-data.' :
-                                            'Please create your bio-data to start the verification process.'}
-                            </p>
-                        </div>
+            {/* Right rail */}
+            <div className="space-y-4">
+                <div className="rounded-xl border border-border bg-surface shadow-card">
+                    <div className="flex items-center gap-2 border-b border-border px-5 py-3.5">
+                        <Bell className="h-4 w-4 text-muted-foreground" aria-hidden />
+                        <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
                     </div>
-
-                    <div className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/60 shadow-lg group hover:-translate-y-2 transition-all duration-500">
-                        <div className="flex flex-col gap-8">
-                            <div className="flex items-center gap-6">
-                                <div className="p-5 bg-rose-500/10 rounded-2xl">
-                                    <Heart className="w-8 h-8 text-rose-500" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Curated List</p>
-                                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Interest Log</h3>
-                                </div>
-                            </div>
-                            <div className="mt-4">
-                                <Link href="/dashboard/matches?tab=shortlisted" className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] flex items-center group/link">
-                                    View List <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover/link:translate-x-1 transition-transform" />
-                                </Link>
-                            </div>
-                        </div>
+                    <div className="px-5 py-4">
+                        <p className="text-[13px] font-semibold text-foreground">Welcome to Parichay</p>
+                        <p className="mt-1 text-[12.5px] text-muted-foreground">Your account has been created successfully. Complete your bio-data to get discovered.</p>
+                        <p className="mt-2 text-[11.5px] text-faint">Just now</p>
                     </div>
                 </div>
 
-                <div className="space-y-8">
-                    <div className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl overflow-hidden relative">
-                        <div className="flex items-center gap-3 mb-10">
-                            <Bell className="w-5 h-5 text-indigo-500" />
-                            <h3 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.3em]">Notifications</h3>
-                        </div>
-                        <div className="space-y-6">
-                            <div className="relative pl-6 border-l border-indigo-500/30">
-                                <p className="text-sm font-black text-slate-900 dark:text-white mb-2 leading-tight uppercase tracking-tight">Welcome to Parichay!</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Your account has been created successfully. Welcome aboard.</p>
-                                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Just Now</span>
-                            </div>
-                        </div>
-                    </div>
+                <div className="rounded-xl border border-border bg-surface p-5 shadow-card">
+                    <h3 className="text-sm font-semibold text-foreground">Need help?</h3>
+                    <p className="mt-1 text-[13px] text-muted-foreground">
+                        Our team helps with profile setup, photo requests and membership questions.
+                    </p>
+                    <button className="mt-3 rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-[13px] font-semibold text-foreground transition-colors hover:bg-surface-hover">
+                        Contact support
+                    </button>
                 </div>
             </div>
         </div>
     );
 }
-
-

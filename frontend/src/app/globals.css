@@ -2,106 +2,125 @@
 
 @variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
+@theme inline {
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-plex-serif), Georgia, serif;
+
+  /* Brand */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+
+  /* Surfaces */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-hover: var(--surface-hover);
+
+  /* Borders */
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* Text */
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
+
+  /* Status */
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-premium: var(--premium);
+  --color-premium-subtle: var(--premium-subtle);
+
+  /* Legacy aliases (pre-redesign pages) */
+  --color-card: var(--surface);
+  --color-card-foreground: var(--foreground);
+  --color-muted: var(--surface-muted);
+  --color-destructive: var(--danger);
+  --color-ring: var(--primary);
+  --color-input: var(--border-strong);
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px rgba(33, 29, 26, 0.06);
+  --shadow-lifted: 0 1px 3px rgba(33, 29, 26, 0.07), 0 6px 16px rgba(33, 29, 26, 0.06);
 }
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 1rem;
-  }
+:root {
+  --primary: #c62828;
+  --primary-hover: #a82020;
+  --primary-subtle: #fcf1f0;
 
-  .dark {
-    --background: 222 25% 4%;
-    --foreground: 210 40% 98%;
-    --card: 222 25% 7%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 25% 5%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-  }
+  --background: #f7f5f2;
+  --surface: #ffffff;
+  --surface-muted: #f5f3f0;
+  --surface-hover: #faf8f5;
+
+  --border: #e8e3dc;
+  --border-strong: #d6cfc5;
+
+  --foreground: #211d1a;
+  --muted-foreground: #57534e;
+  --faint: #8a847c;
+
+  --success: #1e7f4f;
+  --success-subtle: #ebf5ef;
+  --warning: #9a5b0b;
+  --warning-subtle: #fbf3e4;
+  --danger: #b3261e;
+  --danger-subtle: #fceeed;
+  --info: #3b5b92;
+  --info-subtle: #eef2f8;
+  --premium: #a16207;
+  --premium-subtle: #fbf3e0;
 }
 
-@layer utilities {
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
-  }
-  
-  .glass-dark {
-    @apply bg-black/20 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.4)];
-  }
+.dark {
+  --primary: #e36158;
+  --primary-hover: #ec7a72;
+  --primary-subtle: #3a2523;
 
-  .text-fluid-h1 {
-    font-size: clamp(2.5rem, 8vw, 4.5rem);
-    line-height: 1.1;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-  }
+  --background: #171411;
+  --surface: #211e1a;
+  --surface-muted: #2a2621;
+  --surface-hover: #282420;
 
-  .shadow-layered {
-    shadow-color: hsla(0, 0%, 0%, 0.2);
-    box-shadow: 
-      0 1px 1px hsla(0, 0%, 0%, 0.12), 
-      0 2px 2px hsla(0, 0%, 0%, 0.12), 
-      0 4px 4px hsla(0, 0%, 0%, 0.12), 
-      0 8px 8px hsla(0, 0%, 0%, 0.12),
-      0 16px 16px hsla(0, 0%, 0%, 0.12);
-  }
+  --border: #37322c;
+  --border-strong: #4a443c;
+
+  --foreground: #ede9e3;
+  --muted-foreground: #b5afa7;
+  --faint: #847e75;
+
+  --success: #5fbf8f;
+  --success-subtle: #1e2f26;
+  --warning: #d9a03f;
+  --warning-subtle: #332a18;
+  --danger: #e36158;
+  --danger-subtle: #3a2523;
+  --info: #8fa9d6;
+  --info-subtle: #232b38;
+  --premium: #d9a03f;
+  --premium-subtle: #332a18;
 }
 
 body {
-  @apply bg-background text-foreground antialiased selection:bg-indigo-500/30;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  transition: background-color 0.3s ease, color 0.3s ease;
+  @apply bg-background text-foreground antialiased;
   min-height: 100vh;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 }

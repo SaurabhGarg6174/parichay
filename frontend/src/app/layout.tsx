@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { IBM_Plex_Sans, IBM_Plex_Serif } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
@@ -7,7 +7,17 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { ToastProvider } from '@/context/ToastContext';
 import Script from 'next/script';
 
-const inter = Inter({ subsets: ['latin'] });
+const plexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-plex-sans',
+});
+
+const plexSerif = IBM_Plex_Serif({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-plex-serif',
+});
 
 export const metadata: Metadata = {
   title: 'Parichay - Matrimonial Platform',
@@ -21,7 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${plexSans.variable} ${plexSerif.variable} font-sans`}>
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>

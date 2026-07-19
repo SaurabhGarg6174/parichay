@@ -34,21 +34,22 @@ export default function Modal({ isOpen, onClose, title, children, footer }: Moda
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 
                 onClick={onClose} 
             />
-            <div className="relative bg-white dark:bg-slate-900 w-full max-w-lg max-h-[90vh] flex flex-col rounded-3xl shadow-2xl border border-gray-100 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="p-5 md:p-6 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-                    <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white truncate pr-4">{title}</h3>
-                    <button 
+            <div className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lifted">
+                <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
+                    <h3 className="truncate pr-4 text-[15px] font-semibold text-foreground">{title}</h3>
+                    <button
                         onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all shrink-0"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground"
+                        aria-label="Close dialog"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="h-4 w-4" aria-hidden />
                     </button>
                 </div>
-                <div className="p-5 md:p-8 overflow-y-auto custom-scrollbar">
+                <div className="overflow-y-auto px-5 py-4">
                     {children}
                 </div>
                 {footer && (
-                    <div className="p-5 md:p-6 border-t border-gray-100 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-800/30 flex justify-end gap-3 shrink-0">
+                    <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-surface-muted px-5 py-3.5">
                         {footer}
                     </div>
                 )}

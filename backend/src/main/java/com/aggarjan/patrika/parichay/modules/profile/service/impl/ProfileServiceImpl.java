@@ -159,9 +159,8 @@ public class ProfileServiceImpl implements ProfileService {
         public java.util.Map<String, Long> getProfileStats() {
                 java.util.Map<String, Long> stats = new java.util.LinkedHashMap<>();
                 stats.put("PENDING", bioDataRepo.countByMembershipStatus_Name("PENDING"));
-                stats.put("APPROVED", bioDataRepo.countByMembershipStatus_Name("APPROVED"));
-                stats.put("REJECTED", bioDataRepo.countByMembershipStatus_Name("REJECTED"));
                 stats.put("ACTIVE", bioDataRepo.countByMembershipStatus_Name("ACTIVE"));
+                stats.put("INACTIVE", bioDataRepo.countByMembershipStatus_Name("INACTIVE"));
                 return stats;
         }
 
