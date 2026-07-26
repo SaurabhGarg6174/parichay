@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const API_BASE_URL = 'http://localhost:8081/api/v1';
-export const IMAGE_BASE_URL = 'http://localhost:8081';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api/v1';
+export const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_URL || 'http://localhost:8081';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
