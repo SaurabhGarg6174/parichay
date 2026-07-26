@@ -37,8 +37,9 @@ frontend/.env*
 frontend/*.tsbuildinfo
 frontend/next-env.d.ts
 
-
 uploads/
-ARCHITECTURE_REVIEW.md
+obsidian_vault/
 
+ARCHITECTURE_REVIEW.md
 parichay design.pdf
+architecture_index.md
