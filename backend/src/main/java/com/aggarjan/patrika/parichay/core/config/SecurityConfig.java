@@ -30,12 +30,15 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
 
+    @org.springframework.beans.factory.annotation.Value("${app.frontend.base-url}")
+    private String frontendBaseUrl;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOrigins(java.util.List.of("http://localhost:3000"));
+                    config.setAllowedOrigins(java.util.List.of("http://localhost:3000", frontendBaseUrl));
                     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(java.util.List.of("*"));
                     config.setAllowCredentials(true);
@@ -53,7 +56,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/reset-password",
                                 "/api/v1/auth/logout",
                                 "/api/v1/metadata/**",
-                                "/uploads/**")
+                                "/uploads/**",
+                                "/actuator/**")
                         .permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/profiles").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/profiles/search").permitAll()
